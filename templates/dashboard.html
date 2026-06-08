@@ -628,4 +628,12 @@
  document.body.appendChild(document.getElementById('officeDetailsModal'));
  });
 </script>
-{% endblock %}
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const welcomeModalEl = document.getElementById('welcomeModal');
+        if (welcomeModalEl) {
+            const welcomeModal = new bootstrap.Modal(welcomeModalEl);
+            welcomeModal.show();
+        }
+    });
+</script> </div> {% endblock %}

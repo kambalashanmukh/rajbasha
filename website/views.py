@@ -1530,39 +1530,21 @@ def error_404(request, exception=None): return universal_error_view(request, exc
 def error_500(request): return universal_error_view(request, None, 500)
 
 @login_required
+@login_required
 def dashboard(request):
-    """Central Dashboard Router - Routes each role to their dedicated dashboard"""
-    user = request.user
-    role = request.session.get('active_role', user_role(user))
-    profile = getattr(user, 'profile', None)
-   
-   
-    context = {
-        'current_lang': request.session.get('lang', 'en'),
-        'role': role
-    }
-    if role == 'user' and profile:
-        if profile.approval_status == 'pending':
-            if profile.hod_name =="ADMIN":
-                messages.warning(request, "Your registration is pending Admin approval.")
-            else:    
-                messages.warning(request, "Your registration is pending HOD approval. You may edit your details while you wait.")
-            return redirect('qpr_user_profile')
-        elif profile.approval_status == 'rejected':
-            messages.error(request, "Your registration was rejected. Please verify your details and update them, or contact admin.")
-            return redirect('qpr_user_profile')
-    if role == 'admin':
+    """Central router: Pushes user to their highest privilege dashboard by default"""
+    
+    # Get the list of roles we set up previously
+    from .views import user_get_all_roles 
+    roles = user_get_all_roles(request.user) 
+    
+    # Priority Routing: Drop them in the highest dashboard they have access to
+    if 'admin' in roles:
         return redirect('qpr_admin_dashboard')
-
-    elif role == 'manager':
-        return redirect('manager_dashboard')
-   
-    elif role == 'hod':
+    elif 'hod' in roles:
         return redirect('qpr_hod_dashboard')
-       
-    elif role == 'backup_user':
-        return render(request, 'dashboard.html', context)
-
+    elif 'manager' in roles:
+        return redirect('manager_dashboard')
     else:
         return redirect('qpr_user_dashboard')
 
@@ -1585,11 +1567,11 @@ class CustomLoginView(LoginView):
         user = cast(CustomUser, form.get_user())
         current_lang = self.request.session.get('lang', 'en')
        
-        selected_role = form.cleaned_data.get('role')
+        '''selected_role = form.cleaned_data.get('role')
         if selected_role and user_has_role(user, selected_role):
             active_role = selected_role
         else:
-            active_role = user_role(user)
+            active_role = user_role(user)'''
 
         email_choice = form.cleaned_data.get('email_choice', 'primary')
         target_email = user.get_email()
@@ -1608,7 +1590,7 @@ class CustomLoginView(LoginView):
         self.request.session['login_target_email'] = target_email
         self.request.session['is_login_otp'] = True
         self.request.session['lang'] = current_lang
-        self.request.session['active_role'] = active_role
+        #self.request.session['active_role'] = active_role
         self.request.session.modified = True
        
         messages.success(self.request, translate_text("OTP sent successfully.", current_lang))

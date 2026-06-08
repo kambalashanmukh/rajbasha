@@ -1,23 +1,17 @@
 
-/* ==========================================
-   Dark Mode Fixes: QPR Pages & Headings
-   ========================================== */
-
-/* 1. Remove the hardcoded white background from the QPR document container */
 [data-bs-theme="dark"] .qpr-page,
 [data-bs-theme="dark"] .certificate,
 [data-bs-theme="dark"] .card-custom,
 [data-bs-theme="dark"] .print-container,
 [data-bs-theme="dark"] .certificate-loading,
 [data-bs-theme="dark"] .container-form {
-    background-color: #212529 !important; /* Matches Bootstrap dark mode */
+    background-color: #212529 !important;
     color: #e9ecef !important;
 }
 
-/* 2. Fix the QPR Heading Border & Text */
 [data-bs-theme="dark"] .qpr-header {
-    border-color: #6edff6 !important; /* Changes the dark blue border to a bright, readable cyan */
-    background-color: #2b3035 !important; /* Gives the heading box a slightly lighter dark-gray fill */
+    border-color: #6edff6 !important; 
+    background-color: #2b3035 !important;
 }
 
 [data-bs-theme="dark"] .qpr-header .title-hi,
@@ -363,7 +357,7 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-  overflow-wrap: break-word;
+ /* overflow-wrap: break-word;
 }
 
 #goog-gt-tt,
@@ -540,7 +534,7 @@ html, body {
 body:not(.font-medium):not(.font-large) .navbar-custom .container-fluid,
 body:not(.font-medium):not(.font-large) .navbar-custom .container {
     flex-wrap: nowrap !important;
-    overflow: hidden;
+    overflow: visible !important;
 }
 
 body:not(.font-medium):not(.font-large) .navbar-nav {
