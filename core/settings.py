@@ -13,20 +13,25 @@ def env_bool(name, default=False):
 
 
 # SECURITY
-SECRET_KEY = os.getenv("SECRET_KEY")
-DEBUG = False
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-ymob%9c8jb8=ld@^f(*(sc-)m7i=zgvcn6c+k85l7s5m@&hce(')
+DEBUG = True
 
 # Keep this False while testing on HTTP.
 # Set DJANGO_USE_HTTPS_SECURITY=true only when running behind HTTPS.
 USE_HTTPS_SECURITY = env_bool("DJANGO_USE_HTTPS_SECURITY", False)
 
-SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000")) if USE_HTTPS_SECURITY else 0
+"""SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000")) if USE_HTTPS_SECURITY else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = USE_HTTPS_SECURITY
-SECURE_HSTS_PRELOAD = USE_HTTPS_SECURITY
+SECURE_HSTS_PRELOAD = USE_HTTPS_SECURITY"""
 
 ALLOWED_HOSTS = ["10.160.19.20", "192.168.56.101", "127.0.0.1", "localhost","192.168.1.8"]
 
-
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000  # Forces HTTPS for 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 # APPLICATIONS
 INSTALLED_APPS = [
   "django.contrib.admin",
@@ -91,14 +96,13 @@ TEMPLATES = [
 
 # DATABASE - POSTGRESQL
 DATABASES = {
-  "default": {
-      "ENGINE": "django.db.backends.postgresql",
-      "NAME": config("DB_NAME"),
-      "USER": config("DB_USER"),
-      "PASSWORD": config("DB_PASSWORD"),
-      "HOST": config("DB_HOST", default="localhost"),
-      "PORT": config("DB_PORT", default="5432"),
-  }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 20,
+        },
+    }
 }
 
 
@@ -141,19 +145,19 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'petertriffle@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'eetekzvolwnphbqf')
 
 
 # CSRF / SESSION / SECURITY
 CSRF_FAILURE_VIEW = "website.views.csrf_failure"
 
-CSRF_COOKIE_SECURE = USE_HTTPS_SECURITY
-SESSION_COOKIE_SECURE = USE_HTTPS_SECURITY
+#CSRF_COOKIE_SECURE = USE_HTTPS_SECURITY
+#SESSION_COOKIE_SECURE = USE_HTTPS_SECURITY
 
 # Keep False if your JS reads csrftoken from cookie.
-CSRF_COOKIE_HTTPONLY = False
-SESSION_COOKIE_HTTPONLY = True
+#CSRF_COOKIE_HTTPONLY = False
+#SESSION_COOKIE_HTTPONLY = True
 
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -183,4 +187,12 @@ CAPTCHA_FLITE_PATH = os.path.join(BASE_DIR, "espeak_wrapper.sh")
 
 
 # ENCRYPTION
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
+ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', 'EOxZWt1RC6O9GKhF8d30FUxyCyjGAz29smC5i8tWA0I=')
+
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+CSRF_COOKIE_SAMESITE = 'Strict'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+X_FRAME_OPTIONS = 'DENY'
