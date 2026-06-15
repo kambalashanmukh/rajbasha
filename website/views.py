@@ -1532,19 +1532,18 @@ def error_500(request): return universal_error_view(request, None, 500)
 @login_required
 @login_required
 def dashboard(request):
-    """Central router: Pushes user to their highest privilege dashboard by default"""
     
-    # Get the list of roles we set up previously
     from .views import user_get_all_roles 
     roles = user_get_all_roles(request.user) 
     
-    # Priority Routing: Drop them in the highest dashboard they have access to
     if 'admin' in roles:
         return redirect('qpr_admin_dashboard')
     elif 'hod' in roles:
         return redirect('qpr_hod_dashboard')
     elif 'manager' in roles:
         return redirect('manager_dashboard')
+    elif 'backup_user' in roles:               
+        return redirect('backup_user_dashboard')
     else:
         return redirect('qpr_user_dashboard')
 
@@ -8170,3 +8169,13 @@ def process_user_approval(request, profile_id, action):
         messages.warning(request, f"User {target_profile.employee_code} rejected.")
 
     return redirect('qpr_hod_dashboard')
+
+@login_required
+def backup_user_dashboard(request):
+    
+    context = {
+        'role': 'backup_user', 
+        'current_lang': request.session.get('lang', 'en'),
+        'user': request.user
+    }
+    return render(request, 'dashboard.html', context)
