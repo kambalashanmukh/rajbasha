@@ -113,7 +113,7 @@
                 <p><strong>{{ "Designation"|t:current_lang }}:</strong> {% if manager_certificate %}{{ manager_certificate.chairperson_designation|default:"______________________" }}{% else %}______________________{% endif %}</p>
                 <p><strong>{{ "Name of Min./Dep./Org."|t:current_lang }}:</strong> {% if manager_certificate %}{{ manager_certificate.organization_name|default:"______________________" }}{% else %}______________________{% endif %}</p>
                 <p><strong>{{ "Telephone/ Fax No."|t:current_lang }}:</strong> {% if manager_certificate %}{{ manager_certificate.phone_fax|default:"______________________" }}{% else %}______________________{% endif %}</p>
-                <p><strong>{{ "Email address"|t:current_lang }}:</strong> {% if manager_certificate %}{{ manager_certificate.email|default:"______________________" }}{% else %}______________________{% endif %}</p>
+                <p><strong>{{ "Email address"|t:current_lang }}:</strong> {% if manager_certificate %}{{ manager_certificate.email|default:"______________________"|mask_email }}{% else %}______________________{% endif %}</p>
                 </div>
                 <p class = "signature-date-place"><strong>{{ "Date"|t:current_lang }} :</strong> {% if manager_certificate and manager_certificate.certificate_date %}{{ manager_certificate.certificate_date|date:"d/m/Y" }}{% else %}______________________{% endif %} &nbsp;&nbsp; <strong>{{ "Place"|t:current_lang }} :</strong> {% if manager_certificate %}{{ manager_certificate.place|default:"______________________" }}{% else %}______________________{% endif %}</p>
             </div>

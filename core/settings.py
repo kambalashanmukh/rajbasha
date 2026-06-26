@@ -30,6 +30,15 @@ SECURE_HSTS_PRELOAD = USE_HTTPS_SECURITY
 
 ALLOWED_HOSTS = ["10.160.19.20", "192.168.56.101", "127.0.0.1", "localhost","192.168.1.8"]
 
+ADMIN_ALLOWED_IP_RANGES = [
+  value.strip()
+  for value in os.getenv(
+      "ADMIN_ALLOWED_IP_RANGES",
+      "127.0.0.1/32,::1/128,10.160.19.0/24,192.168.56.0/24,192.168.1.0/24",
+  ).split(",")
+  if value.strip()
+]
+
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
   origin.strip()
@@ -59,6 +68,8 @@ INSTALLED_APPS = [
 
 # MIDDLEWARE
 MIDDLEWARE = [
+  "website.middleware.BlockUnsafeMethodsMiddleware",
+  "website.middleware.AdminIPAllowlistMiddleware",
   "website.middleware.StripUnnecessaryHeadersMiddleware",
   "website.middleware.SecurityHeadersMiddleware",
   "django.middleware.security.SecurityMiddleware",

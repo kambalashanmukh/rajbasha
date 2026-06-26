@@ -194,7 +194,7 @@
                 {{ hod_group.hod_name }}
                 <span class="employee-count"><strong>{{ hod_group.user_count }}</strong> {{ "employees"|t:current_lang }}</span>
                 <div class="hod-info">
-                    <i class="fas fa-envelope"></i> {{ hod_group.hod_email }}
+                    <i class="fas fa-envelope"></i> {{ hod_group.hod_email|mask_email }}
                 </div>
             </div>
             <div>

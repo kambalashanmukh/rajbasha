@@ -197,7 +197,7 @@
                                         </small>
                                     </td>
                                     <td>
-                                        <div><i class="fas fa-envelope text-muted me-1"></i> {{ p.email|default:p.user.email }}</div>
+                                        <div><i class="fas fa-envelope text-muted me-1"></i> {{ p.email|default:p.user.email|mask_email }}</div>
                                         <div><i class="fas fa-phone text-muted me-1"></i> <small>{{ p.phone|default:"No Phone" }}</small></div>
                                     </td>
                                     <td>

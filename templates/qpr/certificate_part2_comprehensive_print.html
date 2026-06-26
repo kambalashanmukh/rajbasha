@@ -527,7 +527,7 @@
  </tr>
  <tr>
  <th>{{ "Email Address"|t:current_lang }}</th>
- <td>{{ certificate.chairperson_email|default:"-" }}</td>
+ <td>{{ certificate.chairperson_email|default:"-"|mask_email }}</td>
  </tr>
  </table>
  </div>

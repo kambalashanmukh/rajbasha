@@ -372,7 +372,7 @@ Proficient: {{ item.employees_proficient|default:"0" }}
 <p>Name: {{ part2.chairperson_name }}</p>
 <p>Designation: {{ part2.chairperson_designation }}</p>
 <p>Phone: {{ part2.chairperson_phone }}</p>
-<p>Email: {{ part2.chairperson_email }}</p>
+<p>Email: {{ part2.chairperson_email|mask_email }}</p>
 
 </div>
 

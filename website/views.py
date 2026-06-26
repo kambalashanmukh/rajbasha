@@ -78,7 +78,8 @@ from .models import (
     Section9ImplementationCommitteeData, Section10HindiAdvisoryData,
     Section11SpecificAchievementsData, StaffHindiKnowledge,
     TranslationKnowledge, TypingStenographyKnowledge,
-    UserProfile, WebsiteDetail, WeeklyFill, WeeklySnapshot, Employee, ManagerQPR, AdminQPR, Office
+    UserProfile, WebsiteDetail, WeeklyFill, WeeklySnapshot, Employee, ManagerQPR, AdminQPR, Office,
+    EventImage
 )
 from website.models import OfficersWorkInHindi
 
@@ -1523,6 +1524,14 @@ def event_detail(request, folder):
         return redirect("home")
 
     return render(request, "event_detail.html", {"event": selected_event})
+
+
+def event_image(request, folder, stored_name):
+    image = get_object_or_404(EventImage, folder=folder, stored_name=stored_name)
+    response = HttpResponse(image.data, content_type=image.content_type or "application/octet-stream")
+    response["Content-Disposition"] = f'inline; filename="{image.stored_name}"'
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 def universal_error_view(request, exception=None, status_code=500):
     lang = request.session.get('lang', 'en')

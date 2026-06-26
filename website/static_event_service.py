@@ -3,13 +3,18 @@ import json
 import os
 import shutil
 import logging
+import secrets
 from datetime import datetime
 
 from django.conf import settings
+from django.utils.text import get_valid_filename, slugify
+
+from .models import EventImage
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 EVENTS_ROOT = os.path.join(settings.BASE_DIR, "static", "images", "events")
 STATIC_URL_PREFIX = "/static/images/events"   # used to build URLs in templates
+EVENT_DB_URL_PREFIX = "/events/image"
 logger = logging.getLogger(__name__)
 
 
@@ -74,7 +79,8 @@ def update_event_meta(folder, title_en, title_hi, thumbnail=None):
 
     # Thumbnail support
     if thumbnail:
-        if thumbnail in os.listdir(folder_path):
+        db_exists = EventImage.objects.filter(folder=folder, stored_name=thumbnail).exists()
+        if thumbnail in os.listdir(folder_path) or db_exists:
             meta["thumbnail"] = thumbnail
         else:
             logger.warning("Requested event thumbnail was not found in the event folder.")
@@ -91,6 +97,47 @@ def _format_title(slug):
 
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+
+def _event_image_url(folder, stored_name):
+    return f"{EVENT_DB_URL_PREFIX}/{folder}/{stored_name}/"
+
+
+def _safe_folder_name(event_date, event_name):
+    slug = slugify(event_name or "", allow_unicode=False) or "event"
+    return f"{event_date}_{slug}"
+
+
+def _validate_image(file):
+    ext = os.path.splitext(file.name)[1].lower()
+    content_type = getattr(file, "content_type", "")
+
+    if file.size > MAX_IMAGE_SIZE:
+        raise Exception(f"{file.name} exceeds 5MB limit.")
+    if ext not in IMAGE_EXTS:
+        raise Exception(f"{file.name} is not an allowed image type.")
+    if content_type and content_type not in ALLOWED_IMAGE_TYPES:
+        raise Exception(f"{file.name} has an unsupported content type.")
+
+    return ext, content_type
+
+
+def _store_event_image(folder, file):
+    ext, content_type = _validate_image(file)
+    original_name = get_valid_filename(os.path.basename(file.name))
+    stored_name = f"{secrets.token_urlsafe(18)}{ext}"
+    data = b"".join(file.chunks())
+
+    EventImage.objects.create(
+        folder=folder,
+        stored_name=stored_name,
+        original_name=original_name,
+        content_type=content_type,
+        size=len(data),
+        data=data,
+    )
 
 
 def get_all_events():
@@ -106,21 +153,27 @@ def get_all_events():
         if not os.path.isdir(folder_path):
             continue
 
-        # Collect image files
-        image_files = [
+        # Collect legacy static images and database-backed uploads.
+        legacy_image_files = [
             fname for fname in os.listdir(folder_path)
             if os.path.splitext(fname)[1].lower() in IMAGE_EXTS
         ]
+        db_images = list(EventImage.objects.filter(folder=folder_name))
 
         # Sort by creation time (upload order)
-        image_files.sort(
+        legacy_image_files.sort(
             key=lambda x: os.path.getctime(os.path.join(folder_path, x))
         )
 
-        images = [
+        legacy_images = [
             f"{STATIC_URL_PREFIX}/{folder_name}/{fname}"
-            for fname in image_files
+            for fname in legacy_image_files
         ]
+        db_image_urls = [
+            _event_image_url(folder_name, image.stored_name)
+            for image in db_images
+        ]
+        images = legacy_images + db_image_urls
 
         if not images:
             continue   # skip empty folders
@@ -146,8 +199,11 @@ def get_all_events():
         title_hi = meta.get("title_hi") or title_en
         thumbnail_file = meta.get("thumbnail")
 
-        if thumbnail_file and thumbnail_file in image_files:
+        db_names = {image.stored_name for image in db_images}
+        if thumbnail_file and thumbnail_file in legacy_image_files:
             thumbnail = f"{STATIC_URL_PREFIX}/{folder_name}/{thumbnail_file}"
+        elif thumbnail_file and thumbnail_file in db_names:
+            thumbnail = _event_image_url(folder_name, thumbnail_file)
         else:
             thumbnail = images[0] if images else None
 
@@ -167,13 +223,12 @@ def get_all_events():
 
 def upload_event(event_date, event_name, event_name_hi, files):
     """
-    Create a new event folder under static/images/events/, save images + meta.json.
+    Create a new event folder and save uploaded images in the database.
     Returns the folder name.
     """
     _ensure_dirs()
 
-    slug = event_name.strip().replace(" ", "-")
-    folder_name = f"{event_date}_{slug}"
+    folder_name = _safe_folder_name(event_date, event_name)
     folder_path = os.path.join(EVENTS_ROOT, folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
@@ -183,14 +238,9 @@ def upload_event(event_date, event_name, event_name_hi, files):
         "title_hi": (event_name_hi or event_name).strip(),
     })
 
-    # Save uploaded images
+    # Save uploaded images as database records with unpredictable names.
     for file in files:
-        if file.size > 5 * 1024 * 1024:
-            raise Exception(f"{file.name} exceeds 5MB limit.")
-        dest = os.path.join(folder_path, file.name)
-        with open(dest, "wb") as out:
-            for chunk in file.chunks():
-                out.write(chunk)
+        _store_event_image(folder_name, file)
 
     return folder_name
 
@@ -204,12 +254,7 @@ def upload_images_to_existing_event(folder, files):
         raise Exception(f"Event folder '{folder}' does not exist.")
 
     for file in files:
-        if file.size > 5 * 1024 * 1024:
-            raise Exception(f"{file.name} exceeds 5MB limit.")
-        dest = os.path.join(folder_path, file.name)
-        with open(dest, "wb") as out:
-            for chunk in file.chunks():
-                out.write(chunk)
+        _store_event_image(folder, file)
 
 
 def delete_event(folder):
@@ -217,5 +262,6 @@ def delete_event(folder):
     Delete an entire event folder (images + meta.json).
     """
     folder_path = os.path.join(EVENTS_ROOT, folder)
+    EventImage.objects.filter(folder=folder).delete()
     if os.path.exists(folder_path):
         shutil.rmtree(folder_path)

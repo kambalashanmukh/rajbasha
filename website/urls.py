@@ -118,6 +118,7 @@ urlpatterns = [
     path('manager/report/<str:year>/<path:quarter>/', views.manager_report_detail, name='manager_report_detail'),
     path('manager/state-qpr/', views.manager_state_qpr, name='manager_state_qpr'),
     path("event/<str:folder>/", views.event_detail, name="event_detail"),
+    path("events/image/<str:folder>/<str:stored_name>/", views.event_image, name="event_image"),
     path("events-admin/", views.admin_events_dashboard, name="admin_events_dashboard"),
     path("events-admin/upload/", views.admin_upload_event, name="admin_upload_event"),
     path("events-admin/delete/<str:folder>/", views.admin_delete_event, name="admin_delete_event"),

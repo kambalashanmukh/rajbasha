@@ -30,3 +30,22 @@ def translate_text(text: Optional[str], lang: str) -> str:
     except Exception as e:
         print(f"Translation failed: {e}")
         return text_str
+
+
+@register.filter(name='mask_email')
+def mask_email(value: Optional[str]) -> str:
+    """Obfuscate email addresses for display."""
+    email = str(value or "").strip()
+    if "@" not in email:
+        return email
+
+    local, domain = email.split("@", 1)
+    if not local or not domain:
+        return email.replace("@", " [at] ").replace(".", " [dot] ")
+
+    visible_local = local[:1]
+    domain_parts = domain.split(".")
+    visible_domain = domain_parts[0][:1] + "***" if domain_parts and domain_parts[0] else "***"
+    suffix = " [dot] ".join(domain_parts[1:]) if len(domain_parts) > 1 else ""
+    masked = f"{visible_local}*** [at] {visible_domain}"
+    return f"{masked} [dot] {suffix}" if suffix else masked

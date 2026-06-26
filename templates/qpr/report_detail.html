@@ -177,6 +177,14 @@ function v(val) {
     if (val === null || val === undefined || val === '' || val === 'None') return null;
     return escapeHtml(val);;
 }
+function maskEmail(email) {
+    if (!email || !String(email).includes("@")) return email;
+    const [local, domain] = String(email).split("@");
+    const parts = domain.split(".");
+    const maskedDomain = `${(parts[0] || "").slice(0, 1)}***`;
+    const suffix = parts.slice(1).join(" [dot] ");
+    return `${(local || "").slice(0, 1)}*** [at] ${maskedDomain}${suffix ? " [dot] " + suffix : ""}`;
+}
 function cell(val) {
     const d = v(val);
     if (d === null) return `<div class="dv empty">–</div>`;
@@ -287,7 +295,7 @@ async function loadReport() {
             <td class="lh">फोन / Phone</td>
             <td>${v(r.phone) ?? ''}</td>
             <td class="lh">ई-मेल / Email</td>
-            <td colspan="3">${v(r.email) ?? '–'}</td>
+            <td colspan="3">${v(maskEmail(r.email)) ?? '–'}</td>
         </tr>
     </table>
 

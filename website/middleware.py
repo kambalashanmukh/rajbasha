@@ -1,10 +1,55 @@
 from urllib import response
+from ipaddress import ip_address, ip_network
 
 from bs4 import BeautifulSoup, Comment
 from deep_translator import GoogleTranslator
+from django.conf import settings
+from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 from django.utils.deprecation import MiddlewareMixin
 from django.core.cache import cache
 import hashlib
+
+
+class BlockUnsafeMethodsMiddleware(MiddlewareMixin):
+    """Reject HTTP methods the application does not use."""
+    BLOCKED_METHODS = {"TRACE", "PUT", "DELETE", "PATCH"}
+
+    def process_request(self, request):
+        if request.method.upper() in self.BLOCKED_METHODS:
+            return HttpResponseNotAllowed(["GET", "POST", "HEAD", "OPTIONS"])
+        return None
+
+
+class AdminIPAllowlistMiddleware(MiddlewareMixin):
+    """Allow admin modules only from configured IP ranges."""
+    ADMIN_PREFIXES = ("/admin/", "/qpr/admin/")
+
+    def process_request(self, request):
+        if not request.path.startswith(self.ADMIN_PREFIXES):
+            return None
+
+        allowed_ranges = getattr(settings, "ADMIN_ALLOWED_IP_RANGES", [])
+        if not allowed_ranges:
+            return HttpResponseForbidden("Admin access is not configured.")
+
+        client_ip = self._client_ip(request)
+        if not client_ip:
+            return HttpResponseForbidden("Admin access denied.")
+
+        try:
+            ip_obj = ip_address(client_ip)
+            if any(ip_obj in ip_network(range_value, strict=False) for range_value in allowed_ranges):
+                return None
+        except ValueError:
+            pass
+
+        return HttpResponseForbidden("Admin access denied.")
+
+    def _client_ip(self, request):
+        forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        if forwarded_for:
+            return forwarded_for.split(",")[0].strip()
+        return request.META.get("REMOTE_ADDR", "").strip()
 
 class DynamicTranslationMiddleware(MiddlewareMixin):
     # Added more technical artifacts to prevent them from showing as "एचटीएमएल"

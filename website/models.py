@@ -1496,3 +1496,20 @@ class QuarterlySnapshot(models.Model):
     
     def __str__(self):
         return f"QuarterlySnapshot {self.user.username} {self.quarter} {self.year}"
+
+
+class EventImage(models.Model):
+    """Database-backed event image storage for uploaded event media."""
+    folder = models.CharField(max_length=255, db_index=True)
+    stored_name = models.CharField(max_length=255, unique=True)
+    original_name = models.CharField(max_length=255, blank=True)
+    content_type = models.CharField(max_length=100, blank=True)
+    size = models.PositiveIntegerField(default=0)
+    data = models.BinaryField()
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["uploaded_at"]
+
+    def __str__(self):
+        return f"{self.folder}/{self.stored_name}"
