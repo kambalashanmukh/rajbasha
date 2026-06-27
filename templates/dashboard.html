@@ -555,7 +555,10 @@
  <div class="menu-items" id="menuItems">
  <a href="{% url 'qpr_hod_dashboard' %}" class="menu-item"><i class="fas fa-chart-pie"></i> {{ "Dashboard"|t:current_lang }}</a>
  <a href="{% url 'qpr_hod_detail_list' %}" class="menu-item"><i class="fas fa-list"></i> {{ "Detail List"|t:current_lang }}</a>
- <a href="{% url 'logout' %}" class="menu-item text-danger"><i class="fas fa-sign-out-alt"></i> {{ "Logout"|t:current_lang }}</a>
+ <form method="post" action="{% url 'logout' %}" class="m-0">
+ {% csrf_token %}
+ <button type="submit" class="menu-item text-danger border-0 bg-transparent w-100 text-start"><i class="fas fa-sign-out-alt"></i> {{ "Logout"|t:current_lang }}</button>
+ </form>
  </div>
  <script> document.getElementById('menuToggle').addEventListener('click', () => { document.getElementById('menuItems').classList.toggle('active'); }); </script>
 

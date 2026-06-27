@@ -4,10 +4,12 @@ from unittest.mock import patch
 
 from django.contrib.messages import get_messages
 from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
+from .middleware import ErrorHandlingMiddleware
 from .models import (
     CustomUser, EditRequest, MonthlyFill, MonthlySnapshot, QPRRecord, QuarterlyFill,
     QuarterlySnapshot, Role, Section11SpecificAchievementsData, WeeklyFill, WeeklySnapshot
@@ -17,6 +19,26 @@ from .views import (
     is_period_overlapping, qpr_form, qpr_save_record, report_detail, report_list,
     request_qpr_edit
 )
+
+
+class ErrorHandlingMiddlewareTests(TestCase):
+    def test_production_exception_response_does_not_expose_exception_details(self):
+        request = RequestFactory().get('/internal-error/')
+        SessionMiddleware(lambda req: None).process_request(request)
+        request.session.save()
+        request.user = AnonymousUser()
+        middleware = ErrorHandlingMiddleware(lambda req: HttpResponse('ok'))
+        exception = RuntimeError('database password leaked in traceback')
+
+        with override_settings(DEBUG=False), self.assertLogs('website.middleware', level='ERROR') as logs:
+            response = middleware.process_exception(request, exception)
+
+        content = response.content.decode('utf-8')
+        self.assertEqual(response.status_code, 500)
+        self.assertIn('Internal Server Error', content)
+        self.assertIn("Something went wrong on our end", content)
+        self.assertNotIn('database password leaked in traceback', content)
+        self.assertTrue(any('Unhandled application error' in entry for entry in logs.output))
 
 
 class QPROverlapRestrictionTests(TestCase):

@@ -72,7 +72,10 @@
  <div id="partBadge" class="part-badge">Part-1</div>
  <div>
  <span id="userDisplay" style="color: #666; font-size: 0.9rem;"></span>
- <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+ <form method="post" action="{% url 'logout' %}" class="d-inline">
+ {% csrf_token %}
+ <button type="submit" class="btn btn-sm btn-outline-danger ms-2">Logout</button>
+ </form>
  </div>
  </div>
  </div>
