@@ -125,7 +125,7 @@ class CustomLoginForm(AuthenticationForm):
         initial='primary',
         required=False
     )
-    # captcha = CaptchaField()
+    captcha = CaptchaField()
 
     def __init__(self, request=None, *args, **kwargs):
         self.request = request
@@ -142,7 +142,7 @@ class CustomLoginForm(AuthenticationForm):
         self.fields["username"].label = translate_text("Employee Code", self.lang)
         self.fields["password"].label = translate_text("Password", self.lang)
         #self.fields['role'].label = translate_text("Select Role", self.lang)
-       # self.fields['captcha'].label = translate_text("Enter the characters shown", self.lang)
+        self.fields['captcha'].label = translate_text("Enter the characters shown", self.lang)
         self.fields['email_choice'].label = translate_text("Send Secure OTP To:", self.lang)
         self.fields['email_choice'].choices = [
             ('primary', translate_text("Official Email", self.lang)),
@@ -181,14 +181,14 @@ class CustomLoginForm(AuthenticationForm):
         if not emp_code or not password:
             return cleaned_data
        #bba testing 
-        ''' cache_key = f"login_attempts_{emp_code}"
-         attempts = cache.get(cache_key, 0)
+        cache_key = f"login_attempts_{emp_code}"
+        attempts = cache.get(cache_key, 0)
 
         if attempts >= 3:
             raise forms.ValidationError(
                 translate_text("Account locked due to 3 incorrect attempts. Please try again after 2 hours.", self.lang), 
                 code='locked'
-            )'''
+            )
 
         from .models import UserProfile
 
@@ -198,27 +198,26 @@ class CustomLoginForm(AuthenticationForm):
             )
             # bba testing
         except UserProfile.DoesNotExist:
-            # Increment failed attempts even for invalid users to prevent brute-force enumeration
-           # cache.set(cache_key, attempts + 1, 7200) 
+            cache.set(cache_key, attempts + 1, 7200) 
             raise forms.ValidationError("Invalid Employee Code")
         
         
         user = authenticate(request=self.request,username=profile.user.username,password=password)
    #bba testing 
         if user is None:
-         #   attempts += 1
-         #   cache.set(cache_key, attempts, 7200)
-         #   if attempts >= 3:
-          #      raise forms.ValidationError(
-           #         translate_text("Account locked for 2 hours due to 3 incorrect attempts.", self.lang), 
-            #        code='locked'
-             #   )
-            #else:
-            raise forms.ValidationError(
-                    translate_text(f"Invalid login.", self.lang),
+            attempts += 1
+            cache.set(cache_key, attempts, 7200)
+            if attempts >= 3:
+                raise forms.ValidationError(
+                    translate_text("Account locked for 2 hours due to 3 incorrect attempts.", self.lang), 
+                    code='locked'
+                )
+            else:
+                raise forms.ValidationError(
+                    translate_text(f"Invalid login. {3 - attempts} attempts remaining.", self.lang), 
                     code='invalid_login'
                 )
-         # cache.delete(cache_key) 
+        cache.delete(cache_key) 
          
         self.confirm_login_allowed(user)
         self.user_cache = user

@@ -16,7 +16,6 @@
     margin-top: 2rem !important;
     padding-top: 1.5rem !important;
 }
-/* CSS for our perfect CAPTCHA layout */
 .captcha-container {
     display: flex;
     align-items: center;
@@ -61,11 +60,15 @@
                     </div>
                 {% endif %}
 
-                <form method="post" novalidate>
+                <form method="POST" action="{% url 'login' %}">
                     {% csrf_token %}
                     
                     {% bootstrap_field form.username %}
                     {% bootstrap_field form.password %}
+<<<<<<< Updated upstream
+=======
+       
+>>>>>>> Stashed changes
                     <div class="mb-4 mt-3">
         <label class="form-label fw-bold text-secondary">{{ "Send Secure OTP To:"|t:current_lang }}</label>
         <div class="row g-2">
@@ -85,8 +88,13 @@
                             {% endfor %}
                         </div>
                     </div>
+<<<<<<< Updated upstream
+=======
+                    <div id="captcha-wrapper">
+                        {% bootstrap_field form.captcha %}
+                    </div>
+>>>>>>> Stashed changes
 
-<!-- bba testing -->
                     <button type="submit" class="btn btn-primary w-100 mb-3 shadow-sm mt-3">
                         {{ "Sign In"|t:current_lang }}
                     </button>
