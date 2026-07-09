@@ -48,3 +48,5 @@ weasyprint==61.2
 webencodings==0.5.1
 whitenoise==6.6.0
 zopfli==0.4.1
+argon2--cffi==25.1.0
+argon2--cffi-bindings==25.1.0
