@@ -20,7 +20,7 @@ from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.http import FileResponse, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse, HttpResponseNotAllowed
 from django.shortcuts import render, redirect, get_object_or_404
@@ -34,6 +34,7 @@ from website.models import QPRFinalization
 from .forms import ManagerQPRForm
 from .forms import AdminQPRForm
 from .forms import EmployeeMasterForm
+from .audit import log_audit
 from datetime import date, datetime, timedelta
 from typing import Any, cast
 from urllib.parse import urlencode
@@ -63,7 +64,7 @@ from .forms import (
 from .signals import User
 from .static_event_service import (
     delete_event, get_all_events, update_event_meta,
-    upload_event, upload_images_to_existing_event
+    upload_event, upload_images_to_existing_event, validate_existing_event_folder
 )
 from .templatetags.translate_tags import translate_text
 
@@ -83,6 +84,7 @@ from .models import (
 from website.models import OfficersWorkInHindi
 
 logger = logging.getLogger(__name__)
+EVENT_UPLOAD_SESSION_KEY = "selected_event_upload_folder"
 
 # Font Registration
 FONT_PATH = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'NIRMALA.TTF')
@@ -200,6 +202,12 @@ def submit_profile_change_request(request):
             hod=hod_profile.user,
             status='pending'
         )
+        log_audit(
+            request,
+            'submit_profile_change_request',
+            'ProfileChangeRequest',
+            f"{request.user.username} submitted profile change request for {profile.employee_code}",
+        )
         return JsonResponse({
             'success': True,
             'message': 'Change request submitted successfully. Awaiting HOD approval.'
@@ -276,12 +284,34 @@ def admin_events_dashboard(request):
     events = get_all_events()
     return render(request, "admin_events_dashboard.html", {"events": events})
  
- 
+@login_required
+def admin_upload_new_event(request):
+    require_event_manager(request.user)
+    request.session.pop(EVENT_UPLOAD_SESSION_KEY, None)
+    return redirect("admin_upload_event")
+
+
+@login_required
+@require_POST
+def admin_select_upload_event(request):
+    require_event_manager(request.user)
+    try:
+        folder = validate_existing_event_folder(request.POST.get("folder"))
+    except ValidationError:
+        messages.error(request, "Invalid event folder.")
+        return redirect("admin_events_dashboard")
+
+    request.session[EVENT_UPLOAD_SESSION_KEY] = folder
+    return redirect("admin_upload_event")
+
 @login_required
 def admin_upload_event(request):
     require_event_manager(request.user)
 
-    folder = request.GET.get("folder")
+    if request.GET:
+        return HttpResponseBadRequest("Upload folder must not be supplied in the URL.")
+
+    folder = request.session.get(EVENT_UPLOAD_SESSION_KEY)
  
     if request.method == "POST":
         event_date   = request.POST.get("event_date")
@@ -294,8 +324,18 @@ def admin_upload_event(request):
                 upload_images_to_existing_event(folder, images)
             else:
                 upload_event(event_date, event_name, event_name_hi, images)
- 
+                request.session.pop(EVENT_UPLOAD_SESSION_KEY, None)
+            log_audit(
+                request,
+                'upload_event_assets',
+                'Event',
+                f"{request.user.username} uploaded event assets for {folder or event_name}",
+            )
             return JsonResponse({"status": "success"})
+
+        except ValidationError as exc:
+            message = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+            return JsonResponse({"status": "error", "message": message}, status=400)
  
         except Exception:
             logger.exception("Failed to upload event")
@@ -310,6 +350,12 @@ def admin_delete_event(request, folder):
 
     try:
         delete_event(folder)
+        log_audit(
+            request,
+            'delete_event_assets',
+            'Event',
+            f"{request.user.username} deleted event assets for {folder}",
+        )
         messages.success(request, "Event deleted successfully")
     except Exception:
         logger.error("Failed to save snapshot.", exc_info=True)
@@ -1504,6 +1550,12 @@ def send_otp_email(user, lang, target_email=None, email_type='otp'):
 @require_POST
 def custom_logout(request):
     logout(request)
+    log_audit(
+        request,
+        'logout',
+        'CustomUser',
+        f"User {getattr(request.user, 'username', 'unknown')} logged out",
+    )
     messages.success(request, "You have been logged out successfully.")
     return redirect('home')
 
@@ -1525,6 +1577,7 @@ def event_detail(request, folder):
     return render(request, "event_detail.html", {"event": selected_event})
 
 def universal_error_view(request, exception=None, status_code=500):
+    session = getattr(request, "session", None)
     lang = request.session.get('lang', 'en')
     error_map = {
         400: {'title': "Bad Request",'msg': "The server could not understand the request due to invalid syntax."},
@@ -1620,6 +1673,13 @@ class CustomLoginView(LoginView):
             lang = self.request.session.get('lang', 'en')
             messages.error(self.request, translate_text("Your account has been archived. Please contact the admin.", lang))
             return self.render_to_response(self.get_context_data(form=form))
+        log_audit(
+            self.request,
+            'failed_login',
+            'CustomUser',
+            f"Failed login attempt for username {username or 'unknown'}",
+            status='failure',
+        )
         return super().form_invalid(form)
 
     def get_form_kwargs(self):
@@ -1721,6 +1781,12 @@ class LoginOTPView(View):
                     user.save(update_fields=['otp']) 
 
                 auth_login(request, user)
+                log_audit(
+                request,
+                'successful_login',
+                'CustomUser',
+                f"User {user.username} logged in successfully",
+                )
                
                 #send_system_email(user, request, 'login')
                 if user_role(user) == 'user' and profile and not profile.profile_updated:
@@ -1787,6 +1853,12 @@ class VerifyOTPView(View):
                 user.otp = None
                 user.save(update_fields=['otp'])
                 auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                log_audit(
+                    request,
+                    'successful_login',
+                    'CustomUser',
+                    f"User {user.username} logged in successfully",
+                )
                 #send_system_email(user, request, 'login')
                
                 request.session.pop('pre_login_user_id', None)
@@ -1801,6 +1873,20 @@ class VerifyOTPView(View):
                 attempts = cache.get(att_key, 0) + 1
                 cache.set(att_key, attempts, 600)
                 if attempts >= 5: cache.set(blk_key, True, 600)
+                log_audit(
+                    request,
+                    'failed_login',
+                    'CustomUser',
+                    f"Failed login attempt for username {user.username}",
+                    status='failure',
+                )
+                log_audit(
+                    request,
+                    'failed_login',
+                    'CustomUser',
+                    f"Failed login attempt for username {user.username}",
+                    status='failure',
+                )
                 messages.error(request, translate_text("Invalid or expired OTP.", lang))
                 return render(request, 'registration/verify_otp.html', {'current_lang': lang})
         elif request.session.get('is_signup'):
@@ -1923,6 +2009,12 @@ class ResetPasswordView(View):
                 user.set_password(pwd)
                 user.otp = None
                 user.save()
+                log_audit(
+                    request,
+                    'password_reset',
+                    'CustomUser',
+                    f"Password reset completed for user {user.username}",
+                )
                 #send_system_email(user, request, 'reset')
                 request.session.pop('reset_email_hash', None)
                 messages.success(request, "Password reset successfully.")
@@ -1945,6 +2037,12 @@ def change_password(request):
         else:
             request.user.set_password(new_password1)
             request.user.save()
+            log_audit(
+                request,
+                'password_change',
+                'CustomUser',
+                f"Password changed for user {request.user.username}",
+            )
             messages.success(request, 'Password changed successfully!')
             return redirect('dashboard')
     return render(request, 'qpr/change_password.html')
@@ -2023,6 +2121,12 @@ def download_db_backup(request):
             f"pg_dump -U {db_user} {db} -f {filename}"
         ]
         subprocess.run(cmd, check=True)
+        log_audit(
+            request,
+            'download_db_backup',
+            'DatabaseBackup',
+            f"{request.user.username} created a database backup",
+        )
         messages.success(request, f"Database backup created successfully at {filename}")
         return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
@@ -2082,7 +2186,12 @@ def archive_user(request, user_id):
     user_to_archive.is_active = False    
     user_to_archive.is_archived = True
     user_to_archive.save()
-
+    log_audit(
+        request,
+        'archive_user',
+        'CustomUser',
+        f"{request.user.username} archived user {user_to_archive.username}",
+    )
     messages.success(request, f"User {user_to_archive.username} has been archived successfully.")
     return redirect('dashboard')
 
@@ -2098,7 +2207,12 @@ def unarchive_user(request, archive_id):
         user_to_restore.save()
        
         archived_record.delete()
-       
+        log_audit(
+            request,
+            'unarchive_user',
+            'CustomUser',
+            f"{request.user.username} restored archived user {user_to_restore.username}",
+        )
         messages.success(request, f"User {user_to_restore.username} has been unarchived/restored.")
         return redirect('dashboard')
        
@@ -2313,7 +2427,12 @@ def profile_view(request):
         if approved_change_request:
             approved_change_request.status = 'completed'
             approved_change_request.save()
-
+        log_audit(
+            request,
+            'save_profile',
+            'UserProfile',
+            f"User {request.user.username} saved profile details for employee code {empcode}",
+        )
         #send_system_email(user, request, 'update')
         if profile_approval_required:
             messages.success(request, "Profile submitted successfully! It is now awaiting HOD approval.")
@@ -2377,6 +2496,12 @@ def approve_profile_change_hod(request, request_id):
     change_request.status = 'approved'
     change_request.approved_at = timezone.now()
     change_request.save()
+    log_audit(
+        request,
+        'approve_profile_change_request',
+        'ProfileChangeRequest',
+        f"{request.user.username} approved profile change request {change_request.id}",
+    )
     user = change_request.profile.user
     user.is_edit_allowed = True
     user.save(update_fields=['is_edit_allowed'])
@@ -2419,6 +2544,13 @@ def reject_profile_change_hod(request, request_id):
     change_request.approved_at = timezone.now()
     change_request.approval_comments = rejection_reason
     change_request.save()
+    log_audit(
+        request,
+        'reject_profile_change_request',
+        'ProfileChangeRequest',
+        f"{request.user.username} rejected profile change request {change_request.id}",
+        status='failure',
+    )
 
     user = change_request.profile.user
     user.is_edit_allowed = False
@@ -2437,7 +2569,13 @@ def freeze_profile(request):
     lang = request.session.get('lang', 'en')
     user = request.user
     user.is_frozen = True
-    user.save()
+    user.save(update_fields=['is_frozen'])
+    log_audit(
+        request,
+        'freeze_profile',
+        'UserProfile',
+        f"User {request.user.username} froze their profile",
+    )
     #send_system_email(user, request, 'freeze')
     messages.success(request, translate_text("Your profile has been frozen.", lang))
     return redirect('dashboard')
@@ -2598,6 +2736,12 @@ def manager_qpr_view(request, id=None):
                 obj.is_submitted = True
                 obj.submitted_at = timezone.now()
                 obj.save()
+                log_audit(
+                    request,
+                    'submit_manager_qpr',
+                    'ManagerQPR',
+                    f"Manager {request.user.username} submitted Manager QPR for {obj.quarter} {obj.financial_year}",
+                )
                 messages.success(request, "Manager QPR saved successfully.")
                 return redirect('manager_qpr_detail', id=obj.id)
     else:
@@ -2835,6 +2979,12 @@ def admin_qpr_view(request, id=None):
                 obj.is_submitted = True
                 obj.submitted_at = timezone.now()
                 obj.save()
+                log_audit(
+                    request,
+                    'submit_admin_qpr',
+                    'AdminQPR',
+                    f"Admin {request.user.username} submitted Admin QPR for {obj.quarter} {obj.financial_year}",
+                )
                 messages.success(request, "Admin QPR saved successfully.")
                 return redirect('admin_qpr_detail', id=obj.id)
     else:
@@ -3181,6 +3331,13 @@ def manager_employee_master_add(request):
         form = EmployeeMasterForm(request.POST)
         if form.is_valid():
             form.save()
+            employee = form.save()
+            log_audit(
+                request,
+                'create_employee_master',
+                'EmployeeMaster',
+                f"{request.user.username} added employee master record {getattr(employee, 'empcode', '')}",
+            )
             messages.success(request, "Employee added to master table successfully.")
             return redirect('manager_employee_master_list')
         messages.error(request, "Please correct the errors below.")
@@ -3211,6 +3368,12 @@ def manager_employee_master_edit(request, employee_id):
         form = EmployeeMasterForm(request.POST, instance=employee)
         if form.is_valid():
             form.save()
+            log_audit(
+                request,
+                'update_employee_master',
+                'EmployeeMaster',
+                f"{request.user.username} updated employee master record {employee.empcode}",
+            )
             messages.success(request, f"Employee {employee.empcode} updated successfully.")
             return redirect('manager_employee_master_list')
         messages.error(request, "Please correct the errors below.")
@@ -3242,6 +3405,12 @@ def manager_employee_master_toggle_status(request, employee_id):
         if remarks:
             employee.remarks = remarks
         employee.save(update_fields=['is_active', 'transferred_at', 'remarks', 'updated_at'])
+        log_audit(
+            request,
+            'toggle_employee_master_status',
+            'EmployeeMaster',
+            f"{request.user.username} deactivated employee master record {employee.empcode}",
+        )
         messages.success(request, f"Employee {employee.empcode} marked as transferred out.")
     elif action == 'activate':
         employee.is_active = True
@@ -3251,6 +3420,12 @@ def manager_employee_master_toggle_status(request, employee_id):
             employee.save(update_fields=['is_active', 'transferred_at', 'remarks', 'updated_at'])
         else:
             employee.save(update_fields=['is_active', 'transferred_at', 'updated_at'])
+        log_audit(
+            request,
+            'toggle_employee_master_status',
+            'EmployeeMaster',
+            f"{request.user.username} reactivated employee master record {employee.empcode}",
+        )
         messages.success(request, f"Employee {employee.empcode} reactivated successfully.")
     else:
         messages.error(request, "Invalid employee master action.")
@@ -3267,6 +3442,12 @@ def manager_employee_master_delete(request, employee_id):
     employee = get_object_or_404(EmployeeMaster, id=employee_id)
     empcode = employee.empcode
     employee.delete()
+    log_audit(
+        request,
+        'delete_employee_master',
+        'EmployeeMaster',
+        f"{request.user.username} deleted employee master record {empcode}",
+    )
     messages.success(request, f"Employee {empcode} deleted permanently from the master table.")
     return redirect('manager_employee_master_list')
 
@@ -3455,6 +3636,12 @@ def admin_create_hod(request):
                     profile.hod_name = emp_code
                     profile.profile_updated = True
                     profile.save()
+                    log_audit(
+                        request,
+                        'change_user_role',
+                        'UserProfile',
+                        f"Admin {request.user.username} assigned HOD role to user {display_name} ({profile.employee_code})",
+                    )
                     messages.success(request, f'HOD {display_name} created!')
                     return redirect('qpr_admin_dashboard')
             except UserProfile.DoesNotExist:
@@ -3493,6 +3680,12 @@ def admin_create_manager(request):
                         pass
                     profile.profile_updated = True
                     profile.save()
+                    log_audit(
+                        request,
+                        'change_user_role',
+                        'UserProfile',
+                        f"Admin {request.user.username} assigned Manager role to user {display_name} ({profile.employee_code})",
+                    )
                     messages.success(request, f'Manager {display_name} created!')
                     return redirect('qpr_admin_dashboard')
             except UserProfile.DoesNotExist:
@@ -3551,7 +3744,12 @@ def api_create_office(request):
     if not created:
         messages.error(request, 'Office code already exists')
         return redirect('qpr_admin_dashboard')
-
+    log_audit(
+        request,
+        'create_office',
+        'Office',
+        f"{request.user.username} created office {office.code} ({office.name})",
+    )
     messages.success(request, f'Office {office.code} - {office.name} created for {admin_state}')
     return redirect('qpr_admin_dashboard')
 
@@ -4569,6 +4767,12 @@ def finalize_qpr(request):
             quarter=quarter,
             year=year
         )
+        log_audit(
+            request,
+            'finalize_qpr',
+            'QPRFinalization',
+            f"{request.user.username} finalized QPR for {quarter} {year}",
+        )
        
         return JsonResponse({
             'success': True,
@@ -5122,6 +5326,12 @@ def toggle_freeze_qpr(request, qpr_record_id):
             return JsonResponse({'error': message}, status=400)
    
     qpr_record.save()
+    log_audit(
+        request,
+        'toggle_qpr_freeze',
+        'QPRRecord',
+        f"{request.user.username} {'froze' if qpr_record.is_quarterly_frozen else 'unfroze'} QPR record {qpr_record.id}",
+    )
    
     return redirect('qpr_hod_detail_list')
 
@@ -5249,7 +5459,12 @@ def freeze_division_snapshot(request):
             logger.debug("Section 2 meeting data verified")
     except Exception:
         pass
-
+    log_audit(
+        request,
+        'freeze_division_snapshot',
+        'QPRRecord',
+        f"{request.user.username} froze division snapshot for {current_quarter} {current_year}",
+    )
     messages.success(request, 'Division quarter frozen successfully. Any further changes in QPR will not be shown in the state aggregation.')
     return redirect(f"{reverse('qpr_hod_detail_list')}?{urlencode({'quarter': current_quarter, 'year': current_year})}")
 
@@ -6329,6 +6544,13 @@ def qpr_save_record(request):
                     if fills_created:
                         messages.info(request, f"Record submitted with {fills_created} fill(s) created")
 
+                log_audit(
+                    request,
+                    'submit_qpr',
+                    'QPRRecord',
+                    f"User {request.user.username} submitted QPR record {record.id} ({record.frequency}/{record.quarter}/{record.year})",
+                )
+
         else:
             is_submitted = (data.get('status', 'Draft') == 'Submitted')
 
@@ -6444,6 +6666,13 @@ def qpr_save_record(request):
                     fills_created = ', '.join(agg_result.get('fills_created', []))
                     if fills_created:
                         messages.info(request, f"Record submitted with {fills_created} fill(s) created")
+
+                log_audit(
+                    request,
+                    'submit_qpr',
+                    'QPRRecord',
+                    f"User {request.user.username} submitted QPR record {record.id} ({record.frequency}/{record.quarter}/{record.year})",
+                )
 
         messages.success(request, "Saved successfully")
         form_type = (data.get('form_type') or '').strip().lower()
@@ -6803,7 +7032,13 @@ def approve_edit_request(request, request_id):
             edit_request.approved_by = request.user
             edit_request.approved_at = now()
             edit_request.admin_notes = admin_notes
-            edit_request.save()            
+            edit_request.save()
+            log_audit(
+                request,
+                'approve_qpr_edit_request',
+                'EditRequest',
+                f"Manager {request.user.username} approved edit request {edit_request.id} for QPR record {edit_request.qpr_record_id}",
+            )
             msg = f"Your {edit_request.get_request_type_display().lower()} edit request has been approved."
             if admin_notes:
                 msg += f"\n\nAdmin Notes: {admin_notes}"
@@ -6850,6 +7085,13 @@ def reject_edit_request(request, request_id):
             edit_request.approved_at = now()
             edit_request.admin_notes = admin_notes
             edit_request.save()
+            log_audit(
+                request,
+                'reject_qpr_edit_request',
+                'EditRequest',
+                f"Manager {request.user.username} rejected edit request {edit_request.id} for QPR record {edit_request.qpr_record_id}",
+                status='failure',
+            )
             msg = f"Your {edit_request.get_request_type_display().lower()} edit request has been rejected.\n\nReason: {admin_notes}"
             #send_system_email(
             #    edit_request.user,
@@ -7589,6 +7831,12 @@ def qpr_certificate(request, record_id):
     context = {
         'record': rec,
     }
+    log_audit(
+        request,
+        'generate_certificate',
+        'QPRRecord',
+        f"User {request.user.username} generated certificate for QPR record {rec.id}",
+    )
     return render(request, 'qpr/certificate.html', context)
 
 
@@ -7717,6 +7965,12 @@ def manager_certificate_form(request, pk):
         certificate.is_submitted = True
         certificate.submitted_at = timezone.now()
         certificate.save()
+        log_audit(
+            request,
+            'submit_manager_certificate',
+            'ManagerCertificate',
+            f"{request.user.username} submitted manager certificate {certificate.id}",
+        )
         messages.success(request, 'Certificate submitted.')
         return redirect('manager_certificate_view', pk=certificate.id)
 
@@ -7752,6 +8006,12 @@ def manager_certificate_delete(request, pk):
         return redirect('manager_certificate_list')
     certificate = get_object_or_404(ManagerCertificate, pk=pk, user=request.user)
     certificate.delete()
+    log_audit(
+        request,
+        'delete_manager_certificate',
+        'ManagerCertificate',
+        f"{request.user.username} deleted manager certificate {pk}",
+    )
     messages.success(request, 'Certificate deleted.')
     return redirect('manager_certificate_list')
 
@@ -8166,7 +8426,13 @@ def certificate_part2_form(request, pk):
             certificate.submitted_by = request.user
             certificate.submitted_at = timezone.now()
             certificate.save()
-           
+            log_audit(
+                request,
+                'submit_qpr_part2',
+                'QPRPartTwo',
+                f"{request.user.username} submitted QPR Part II certificate {certificate.id}",
+            )
+
             messages.success(request, translate_text('Certificate submitted successfully!', lang))
             return redirect('certificate_part2_list')
         else:
@@ -8253,6 +8519,12 @@ def certificate_part2_delete(request, pk):
    
     # At this point request.method is guaranteed to be POST due to @require_POST
     certificate.delete()
+    log_audit(
+        request,
+        'delete_qpr_part2',
+        'QPRPartTwo',
+        f"{request.user.username} deleted QPR Part II certificate {pk}",
+    )
     messages.success(request, translate_text('Certificate deleted.', lang))
    
     return redirect('certificate_part2_list')
@@ -8310,13 +8582,25 @@ def process_user_approval(request, profile_id, action):
        
         target_profile.approval_status = 'approved'
         target_profile.save()
-       
+        log_audit(
+            request,
+            'approve_user',
+            'UserProfile',
+            f"{request.user.username} approved user profile for {target_profile.employee_code}",
+        )
         #send_system_email(target_profile.user, request, 'accepted_alert')
         messages.success(request, f"User {target_profile.employee_code} approved.")
        
     elif action == 'reject':
         target_profile.approval_status = 'rejected'
         target_profile.save()
+        log_audit(
+            request,
+            'reject_user',
+            'UserProfile',
+            f"{request.user.username} rejected user profile for {target_profile.employee_code}",
+            status='failure',
+        )
         #send_system_email(target_profile.user, request, 'rejected_alert')
         messages.warning(request, f"User {target_profile.employee_code} rejected.")
 

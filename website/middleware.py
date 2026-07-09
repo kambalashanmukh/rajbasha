@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.http import Http404
 from django.core.cache import cache
 import hashlib
-
+from django.utils.cache import add_never_cache_headers
 
 logger = logging.getLogger(__name__)
 
@@ -171,4 +171,10 @@ class StripUnnecessaryHeadersMiddleware(MiddlewareMixin):
         if "Server" in response:
             del response["Server"]
         return response
-        
+
+class NoCacheMiddleware(MiddlewareMixin):
+    """Add headers to prevent caching of sensitive pages."""
+    def process_response(self, request, response):
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            add_never_cache_headers(response)
+        return response
