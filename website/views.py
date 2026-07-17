@@ -1,6 +1,7 @@
 import csv
 import hashlib
 import io
+import ipaddress
 import json
 import logging
 import os
@@ -67,6 +68,7 @@ from .static_event_service import (
     upload_event, upload_images_to_existing_event, validate_existing_event_folder
 )
 from .templatetags.translate_tags import translate_text
+from .audit import get_client_ip
 
 from .models import (
     ArchivedUser, CertificateData, CodeManualStandardForms, CustomUser, DataAccessLog,
@@ -85,6 +87,7 @@ from website.models import OfficersWorkInHindi
 
 logger = logging.getLogger(__name__)
 EVENT_UPLOAD_SESSION_KEY = "selected_event_upload_folder"
+DEFAULT_EVENT_ADMIN_ALLOWED_IPS = ("10.160.18.20")# same change if necessary
 
 # Font Registration
 FONT_PATH = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'NIRMALA.TTF')
@@ -237,8 +240,79 @@ def require_event_manager(user):
     if not can_manage_events(user):
         raise PermissionDenied
 
+
+def _split_ip_entries(value):
+    if not value:
+        return []
+    if isinstance(value, (list, tuple, set)):
+        values = value
+    else:
+        values = re.split(r"[,;\s]+", str(value))
+    return [str(item).strip() for item in values if str(item).strip()]
+
+
+def _ip_matches_allowed_entries(client_ip, allowed_entries):
+    if not client_ip:
+        return False
+
+    try:
+        client_address = ipaddress.ip_address(client_ip)
+    except ValueError:
+        return False
+
+    for entry in allowed_entries:
+        try:
+            if "/" in entry:
+                if client_address in ipaddress.ip_network(entry, strict=False):
+                    return True
+            elif client_address == ipaddress.ip_address(entry):
+                return True
+        except ValueError:
+            logger.warning("Ignoring invalid event admin IP whitelist entry: %s", entry)
+    return False
+
+
+def _event_admin_allowed_ips(user):
+    allowed_ips = []
+    allowed_ips.extend(_split_ip_entries(
+        getattr(settings, "EVENT_ADMIN_ALLOWED_UPLOAD_IPS", DEFAULT_EVENT_ADMIN_ALLOWED_IPS)
+    ))
+
+    profile = getattr(user, "profile", None)
+    allowed_ips.extend(_split_ip_entries(getattr(profile, "ip_number", "")))
+    return allowed_ips
+
+
+def _event_admin_client_ip(request):
+    if getattr(settings, "EVENT_ADMIN_TRUST_X_FORWARDED_FOR", False):
+        return get_client_ip(request)
+    return request.META.get("REMOTE_ADDR")
+
+
+def require_event_admin_ip(request):
+    client_ip = _event_admin_client_ip(request)
+    if _ip_matches_allowed_entries(client_ip, _event_admin_allowed_ips(request.user)):
+        return None
+
+    log_audit(
+        request,
+        "blocked_event_admin_ip",
+        "Event",
+        f"{request.user.username} attempted event admin access from non-whitelisted IP {client_ip}",
+        status="failed",
+    )
+    message = "Login from the whitelisted IP address to manage event uploads."
+    if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.method == "POST":
+        return JsonResponse({"status": "error", "message": message}, status=403)
+    return HttpResponseForbidden(message)
+
+
+@login_required
 def get_event_images(request, folder):
     require_event_manager(request.user)
+    denied_response = require_event_admin_ip(request)
+    if denied_response:
+        return denied_response
 
     if request.method != 'POST':
         return JsonResponse({'images': []}, status=400)
@@ -255,8 +329,12 @@ def get_event_images(request, folder):
         logger.exception("Failed to retrieve images")
         return JsonResponse({'images': [], 'error': 'Unable to retrieve images'})
 
+@login_required
 def update_event_titles(request):
     require_event_manager(request.user)
+    denied_response = require_event_admin_ip(request)
+    if denied_response:
+        return denied_response
 
     if request.method != 'POST':
         return redirect('admin_events_dashboard')
@@ -280,6 +358,9 @@ def update_event_titles(request):
 @login_required
 def admin_events_dashboard(request):
     require_event_manager(request.user)
+    denied_response = require_event_admin_ip(request)
+    if denied_response:
+        return denied_response
 
     events = get_all_events()
     return render(request, "admin_events_dashboard.html", {"events": events})
@@ -287,6 +368,9 @@ def admin_events_dashboard(request):
 @login_required
 def admin_upload_new_event(request):
     require_event_manager(request.user)
+    denied_response = require_event_admin_ip(request)
+    if denied_response:
+        return denied_response
     request.session.pop(EVENT_UPLOAD_SESSION_KEY, None)
     return redirect("admin_upload_event")
 
@@ -295,6 +379,9 @@ def admin_upload_new_event(request):
 @require_POST
 def admin_select_upload_event(request):
     require_event_manager(request.user)
+    denied_response = require_event_admin_ip(request)
+    if denied_response:
+        return denied_response
     try:
         folder = validate_existing_event_folder(request.POST.get("folder"))
     except ValidationError:
@@ -307,6 +394,9 @@ def admin_select_upload_event(request):
 @login_required
 def admin_upload_event(request):
     require_event_manager(request.user)
+    denied_response = require_event_admin_ip(request)
+    if denied_response:
+        return denied_response
 
     if request.GET:
         return HttpResponseBadRequest("Upload folder must not be supplied in the URL.")
@@ -347,6 +437,9 @@ def admin_upload_event(request):
 @login_required
 def admin_delete_event(request, folder):
     require_event_manager(request.user)
+    denied_response = require_event_admin_ip(request)
+    if denied_response:
+        return denied_response
 
     try:
         delete_event(folder)
@@ -367,6 +460,9 @@ def admin_delete_event(request, folder):
 @login_required
 def admin_edit_event_titles(request):
     require_event_manager(request.user)
+    denied_response = require_event_admin_ip(request)
+    if denied_response:
+        return denied_response
     if request.method == "POST":
         try:
             data     = json.loads(request.body)
@@ -389,6 +485,9 @@ def admin_edit_event_titles(request):
 @login_required
 def set_thumbnail(request, folder):
     require_event_manager(request.user)
+    denied_response = require_event_admin_ip(request)
+    if denied_response:
+        return denied_response
 
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
@@ -3981,7 +4080,12 @@ def qpr_form(request):
 
     used = []
     for r in QPRRecord.objects.filter(user=request.user):
-        used.append({'quarter': r.quarter, 'year': r.year or '', 'record_id': r.pk})
+        used.append({
+            'quarter': r.quarter,
+            'year': r.year or '',
+            'frequency': (r.frequency or '').lower(),
+            'record_id': r.pk,
+        })
 
    
 
@@ -4014,9 +4118,26 @@ def qpr_form(request):
 
     fiscal_year_start = today.year - 1 if month < 4 else today.year
     current_financial_year = f"{fiscal_year_start}-{fiscal_year_start + 1}"
+    requested_edit_record_id = (request.GET.get('edit_record') or '').strip()
+    requested_edit_scope = (request.GET.get('edit_scope') or '').strip().lower()
+    if requested_edit_record_id:
+        try:
+            edit_record = QPRRecord.objects.get(pk=requested_edit_record_id, user=request.user)
+            approval_scope = requested_edit_scope if requested_edit_scope in SNAPSHOT_EDIT_SCOPES else 'base'
+            if _approved_qpr_edit_request(request.user, edit_record, approval_scope):
+                current_quarter = edit_record.quarter or current_quarter
+                current_financial_year = edit_record.year or current_financial_year
+        except (QPRRecord.DoesNotExist, ValueError):
+            pass
+
     min_start = 2024
     financial_years = []
-    for s in range(min_start, fiscal_year_start + 1):
+    selected_fiscal_year_start = fiscal_year_start
+    try:
+        selected_fiscal_year_start = int(str(current_financial_year).split('-')[0])
+    except (TypeError, ValueError):
+        selected_fiscal_year_start = fiscal_year_start
+    for s in range(min_start, max(fiscal_year_start, selected_fiscal_year_start) + 1):
         financial_years.append({'start_year': s, 'end_year': s + 1})
 
     context.update({
@@ -4033,8 +4154,6 @@ def qpr_form(request):
     try:
         records_qs = QPRRecord.objects.filter(user=request.user).order_by('-id')
         records = []
-        requested_edit_record_id = (request.GET.get('edit_record') or '').strip()
-        requested_edit_scope = (request.GET.get('edit_scope') or '').strip().lower()
         for r in records_qs:
             d = serialize_qpr_record(r)
             approved_request = _add_qpr_edit_flags(d, r, request.user, request.user)
@@ -6426,6 +6545,10 @@ def qpr_save_record(request):
 
         if record_id:
             record = get_object_or_404(QPRRecord, pk=record_id, user=request.user)
+            was_submitted = record.is_submitted
+            original_frequency = record.frequency
+            original_period_start = record.period_start
+            original_period_end = record.period_end
             snapshot_edit_scope = (data.get('snapshot_edit_scope') or '').strip().lower()
             if snapshot_edit_scope in SNAPSHOT_EDIT_SCOPES:
                 if data.get('status', 'Submitted') != 'Submitted':
@@ -6478,6 +6601,10 @@ def qpr_save_record(request):
             record.email = data.get('email', '')
             record.frequency = data.get('frequency', 'quarterly')
             record.is_submitted = (record.status == 'Submitted')
+            if was_submitted and base_approved_request:
+                record.frequency = original_frequency
+                record.period_start = original_period_start
+                record.period_end = original_period_end
 
             allowed_quarters = get_allowed_quarters(record.year)
             if record.quarter and record.quarter not in allowed_quarters:
