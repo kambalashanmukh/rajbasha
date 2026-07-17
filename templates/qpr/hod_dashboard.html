@@ -151,9 +151,12 @@
                     <a href="{% url 'change_password' %}" class="btn btn-warning btn-custom">
                         <i class="fas fa-lock"></i> {{ "Change Password"|t:current_lang }}
                     </a>
-                    <a href="{% url 'logout' %}" class="btn btn-danger btn-custom">
-                        <i class="fas fa-sign-out-alt"></i> {{ "Logout"|t:current_lang }}
-                    </a>
+                    <form method="post" action="{% url 'logout' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-custom">
+                            <i class="fas fa-sign-out-alt"></i> {{ "Logout"|t:current_lang }}
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

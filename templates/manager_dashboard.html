@@ -59,9 +59,12 @@
                 <a href="{% url 'admin_events_dashboard' %}" class="btn btn-success text-white">
                     <i class="fas fa-calendar-alt"></i> {{ "Events"|t:current_lang }}
                 </a>
-                <a href="{% url 'logout' %}" class="btn btn-danger">
-                    <i class="fas fa-sign-out-alt"></i> {{ "Logout"|t:current_lang }}
-                </a>
+                <form method="post" action="{% url 'logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> {{ "Logout"|t:current_lang }}
+                    </button>
+                </form>
             </div>
         </div>
     </div>
