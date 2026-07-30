@@ -1,6 +1,7 @@
 from django.urls import path, include
 from captcha import views as captcha_views
 from website import views
+from website import parichay_views
 from website.views import (
     CustomLoginView, LoginOTPView, signup, ForgotPasswordView, VerifyOTPView, ResetPasswordView,
     custom_logout
@@ -14,6 +15,8 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     
     path('login/', CustomLoginView.as_view(), name='login'),
+    path('parichay/login/', parichay_views.parichay_login, name='parichay_login'),
+    path('parichay/callback/', parichay_views.parichay_callback, name='parichay_callback'),
     path('login/verify-otp/', LoginOTPView.as_view(), name='login_otp_step'),
     path('signup/', signup, name='signup'),
     path('logout/', custom_logout, name='logout'),

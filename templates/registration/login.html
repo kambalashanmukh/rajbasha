@@ -94,7 +94,17 @@
                         {{ "Sign In"|t:current_lang }}
                     </button>
                 </form>
+                <div class="text-center my-3">
+                    <span class="text-muted">OR</span>
+                </div>
 
+                <a href="{% url 'parichay_login' %}"
+                    class="btn btn-outline-primary w-100 mb-3">
+                        <i class="bi bi-shield-lock"></i>
+                        Login with Parichay
+                </a>
+
+                    
                 <div class="text-center mt-2">
                     <p class="mb-1"><a href="{% url 'forgot_password' %}" class="text-secondary small">{{ "Forgot Password?"|t:current_lang }}</a></p>
                     <p class="mb-0 small">{{ "Don't have an account?"|t:current_lang }} <a href="{% url 'signup' %}" class="fw-bold text-decoration-none">{{ "Create account"|t:current_lang }}</a></p>

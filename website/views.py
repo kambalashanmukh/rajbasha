@@ -87,7 +87,7 @@ from website.models import OfficersWorkInHindi
 
 logger = logging.getLogger(__name__)
 EVENT_UPLOAD_SESSION_KEY = "selected_event_upload_folder"
-DEFAULT_EVENT_ADMIN_ALLOWED_IPS = ("10.160.18.20")# same change if necessary
+DEFAULT_EVENT_ADMIN_ALLOWED_IPS = ("10.250.221.87")# same change if necessary
 
 # Font Registration
 FONT_PATH = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'NIRMALA.TTF')
