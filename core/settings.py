@@ -28,7 +28,7 @@ SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000")) i
 SECURE_HSTS_INCLUDE_SUBDOMAINS = USE_HTTPS_SECURITY
 SECURE_HSTS_PRELOAD = USE_HTTPS_SECURITY
 
-ALLOWED_HOSTS = ["10.160.19.20", "192.168.56.101", "127.0.0.1", "localhost","192.168.1.8"]
+ALLOWED_HOSTS = ["10.160.19.20", "192.168.56.101", "127.0.0.1", "localhost","192.168.1.8",]
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
@@ -153,6 +153,10 @@ AUTH_USER_MODEL = "website.CustomUser"
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
+
+# Event admin upload access is restricted by client IP in addition to login/role.
+EVENT_ADMIN_ALLOWED_UPLOAD_IPS = ["10.160.18.20"] # change this ip to sir's or the testing computer ip
+EVENT_ADMIN_TRUST_X_FORWARDED_FOR = False #keep this true when running behind nginx.
 
 
 # EMAIL CONFIG

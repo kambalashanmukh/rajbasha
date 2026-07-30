@@ -83,6 +83,11 @@ let API_URL = window.QPR_API_URL || null;
 let records = []; // Store data globally
 
 function unlockQprFillControls() {
+ if (window.QPR_APPROVED_EDIT_PERIOD_LOCKED) {
+ syncApprovedEditPeriodLockMirrors();
+ return;
+ }
+
  const frequencyEl = document.getElementById('frequency');
  if (frequencyEl) {
  frequencyEl.disabled = false;
@@ -129,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
  const serverYear = window.QPR_SERVER_YEAR || '';
  const quarterEl = document.getElementById('quarter');
  const yearEl = document.getElementById('year');
+ if (yearEl && serverYear) yearEl.value = serverYear;
  if (quarterEl && serverQuarter) quarterEl.value = serverQuarter;
 
  // Populate quarter options based on selected year and today's date
@@ -344,6 +350,7 @@ function parseLocalDate(dateStr) {
 
  if (frequencyEl) {
  frequencyEl.addEventListener('change', () => {
+ updateQuarterAvailability();
  updateMissingDaysAlert();
  updateAvailabilitySummary();
  
@@ -404,6 +411,7 @@ function parseLocalDate(dateStr) {
  if (qprForm) {
  qprForm.addEventListener('submit', function(ev){
  try {
+ syncApprovedEditPeriodLockMirrors();
  const statusInput = qprForm.querySelector('input[name="status"]');
  const statusVal = statusInput ? String(statusInput.value).toLowerCase() : null;
  if (isScopedSnapshotEditMode() && statusVal === 'draft') {
@@ -533,6 +541,7 @@ function populateQuarterDropdown() {
  const quarterSelect = document.getElementById("quarter");
  const yearEl = document.getElementById("year");
  if (!quarterSelect || !yearEl) return;
+ const previousQuarter = quarterSelect.value;
 
  const yearValue = yearEl.value;
  if (!yearValue) return;
@@ -574,8 +583,15 @@ function populateQuarterDropdown() {
  quarterSelect.appendChild(opt);
  });
 
- // Preserve server-provided selection when present
+ // Preserve the current user/edit selection first; use server default only on initial load.
  try {
+ if (previousQuarter) {
+ const foundPrevious = Array.from(quarterSelect.options).some(o => o.value === previousQuarter);
+ if (foundPrevious) {
+ quarterSelect.value = previousQuarter;
+ return;
+ }
+ }
  const serverQuarter = window.QPR_SERVER_QUARTER || '';
  if (serverQuarter) {
  const found = Array.from(quarterSelect.options).some(o => o.value === serverQuarter);
@@ -590,22 +606,56 @@ function updateQuarterAvailability() {
  const quarterSelect = document.getElementById('quarter');
  if (!yearSelect || !quarterSelect) return;
 
- const selectedYear = yearSelect.value;
- // Build a set of quarters used in this selected year (excluding the currently editing record)
- const editingId = document.getElementById('recordId') ? document.getElementById('recordId').value : '';
- const usedQuarters = window.QPR_USED_QUARTERS || [];
- const usedForYear = new Set(usedQuarters.filter(u => (u.year||u.year_string||'') === selectedYear && String(u.record_id || u.recordId || u.id || '') !== String(editingId)).map(u => (u.quarter || '').trim()));
-
  Array.from(quarterSelect.options).forEach(opt => {
- const quarterValue = opt.value.trim();
- if (usedForYear.has(quarterValue)) {
- opt.disabled = true;
- opt.title = 'A report for this quarter already exists';
- } else {
  opt.disabled = false;
  opt.title = '';
+ });
+}
+
+const APPROVED_EDIT_PERIOD_FIELDS = [
+ { id: 'quarter', name: 'quarter' },
+ { id: 'year', name: 'year' },
+ { id: 'selectedDate', name: 'selected_date' },
+ { id: 'frequency', name: 'frequency' }
+];
+
+function syncApprovedEditPeriodLockMirrors() {
+ const form = document.getElementById('qprForm');
+ if (!form) return;
+
+ APPROVED_EDIT_PERIOD_FIELDS.forEach(field => {
+ const source = document.getElementById(field.id);
+ let mirror = form.querySelector(`input[type="hidden"][data-period-lock-mirror="${field.name}"]`);
+ if (!source || !source.disabled) {
+ if (mirror) mirror.remove();
+ return;
+ }
+
+ if (!mirror) {
+ mirror = document.createElement('input');
+ mirror.type = 'hidden';
+ mirror.name = field.name;
+ mirror.dataset.periodLockMirror = field.name;
+ form.appendChild(mirror);
+ }
+ mirror.value = source.value || '';
+ });
+}
+
+function setApprovedEditPeriodLock(locked) {
+ window.QPR_APPROVED_EDIT_PERIOD_LOCKED = !!locked;
+ APPROVED_EDIT_PERIOD_FIELDS.forEach(field => {
+ const source = document.getElementById(field.id);
+ if (!source) return;
+ source.disabled = !!locked;
+ source.classList.toggle('text-muted', !!locked);
+ if (locked) {
+ source.title = 'This value is fixed for the approved QPR edit.';
+ } else if (source.title === 'This value is fixed for the approved QPR edit.') {
+ source.title = '';
  }
  });
+ syncApprovedEditPeriodLockMirrors();
 }
 
 // --- 2. Load Data (GET) ---
@@ -712,7 +762,7 @@ async function loadData() {
  const rid = parseInt(editId, 10);
  console.log("Attempting to edit record ID:", rid);
  if (!isNaN(rid)) {
- const rec = records.find(r => r.id === rid);
+ const rec = records.find(r => String(r.id) === String(rid));
  console.log("Found record in array:", rec);
  if (rec) {
  editRecord(rid);
@@ -861,7 +911,7 @@ async function saveData(status) {
 // --- 4. Edit Data (Now working!) ---
 function editRecord(id) {
  // This finds the record because we updated 'records' in loadData()
- const record = records.find(r => r.id === id);
+ const record = records.find(r => String(r.id) === String(id));
  
  if (!record) {
  console.error("Record not found for ID:", id);
@@ -895,10 +945,12 @@ function editRecord(id) {
  if (officeCodeEl && String(officeCodeEl.dataset.protected) !== '1') officeCodeEl.value = record.officeCode || '';
  const regionEl = document.getElementById('region');
  if (regionEl && String(regionEl.dataset.protected) !== '1') regionEl.value = record.region || '';
- const quarterEl = document.getElementById('quarter');
- if (quarterEl) quarterEl.value = record.quarter || '';
  const yearEl = document.getElementById('year');
  if (yearEl && record.year) yearEl.value = record.year;
+ try { populateQuarterDropdown(); } catch(e) { console.error(e); }
+ const quarterEl = document.getElementById('quarter');
+ if (quarterEl) quarterEl.value = record.quarter || '';
+ try { updateQuarterAvailability(); } catch(e) { console.error(e); }
  const selectedDateEl = document.getElementById('selectedDate');
  if (selectedDateEl) {
  const editPeriodStart = snapshotEdit ? snapshotEdit.period_start : record.period_start;
@@ -963,6 +1015,7 @@ function editRecord(id) {
  
  // Disable/Enable form based on edit permission
  setFormEditability(canEditCurrentRecord && canUseCurrentApproval, (record.edit_approved || scopedEditRequested) && canUseCurrentApproval);
+ setApprovedEditPeriodLock(canEditCurrentRecord && canUseCurrentApproval && (record.edit_approved || scopedEditRequested));
 
  showTab(1);
 }
@@ -981,6 +1034,7 @@ function setFormEditability(canEdit, editApproved) {
  const isProtected = String(input.dataset.protected) === '1';
  if (!isProtected) input.disabled = false;
  });
+ setApprovedEditPeriodLock(false);
  saveBtns.forEach(btn => btn.disabled = false);
 
  if (editApproved) {

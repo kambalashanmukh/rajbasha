@@ -1,6 +1,8 @@
 from urllib import response
+import base64
 import hashlib
 import logging
+import secrets
 from bs4 import BeautifulSoup, Comment
 from deep_translator import GoogleTranslator
 from django.conf import settings
@@ -13,6 +15,11 @@ import hashlib
 from django.utils.cache import add_never_cache_headers
 
 logger = logging.getLogger(__name__)
+
+
+def _csp_sha256(value):
+    digest = hashlib.sha256(value.encode("utf-8"), usedforsecurity=False).digest()
+    return "'sha256-%s'" % base64.b64encode(digest).decode("ascii")
 
 
 class ErrorHandlingMiddleware(MiddlewareMixin):
@@ -137,8 +144,60 @@ class DynamicTranslationMiddleware(MiddlewareMixin):
 
 
 class SecurityHeadersMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        request.csp_nonce = secrets.token_urlsafe(16)
+
+    def _prepare_html_for_csp(self, request, response):
+        content_type = response.get("Content-Type", "")
+        if "text/html" not in content_type or getattr(response, "streaming", False):
+            return [], []
+
+        try:
+            charset = getattr(response, "charset", None) or "utf-8"
+            soup = BeautifulSoup(response.content.decode(charset), "html.parser")
+            nonce = getattr(request, "csp_nonce", "")
+            script_attr_hashes = set()
+            style_attr_hashes = set()
+
+            for tag in soup.find_all(["script", "style"]):
+                if nonce and not tag.get("nonce"):
+                    tag["nonce"] = nonce
+
+            for tag in soup.find_all(True):
+                for attr_name, attr_value in list(tag.attrs.items()):
+                    if attr_name.lower().startswith("on"):
+                        if isinstance(attr_value, list):
+                            attr_value = " ".join(attr_value)
+                        script_attr_hashes.add(_csp_sha256(str(attr_value)))
+                    elif attr_name.lower() == "style":
+                        if isinstance(attr_value, list):
+                            attr_value = " ".join(attr_value)
+                        style_attr_hashes.add(_csp_sha256(str(attr_value)))
+
+            response.content = soup.encode(charset)
+            if response.has_header("Content-Length"):
+                response["Content-Length"] = str(len(response.content))
+            return sorted(script_attr_hashes), sorted(style_attr_hashes)
+        except Exception:
+            logger.exception("Failed to apply CSP nonces")
+            return [], []
+
     def process_response(self, request, response):
         # Preserve any stronger upstream setting while preventing an explicit disable state.
+        nonce = getattr(request, "csp_nonce", "")
+        script_attr_hashes, style_attr_hashes = self._prepare_html_for_csp(request, response)
+        script_sources = ["'self'"]
+        style_sources = ["'self'", "https://cdn.jsdelivr.net"]
+        if nonce:
+            script_sources.append(f"'nonce-{nonce}'")
+            style_sources.append(f"'nonce-{nonce}'")
+        if script_attr_hashes:
+            script_sources.append("'unsafe-hashes'")
+            script_sources.extend(script_attr_hashes)
+        if style_attr_hashes:
+            style_sources.append("'unsafe-hashes'")
+            style_sources.extend(style_attr_hashes)
+
         response.setdefault("X-XSS-Protection", "1; mode=block")
         response.setdefault("X-Content-Type-Options", "nosniff")
         response.setdefault("Cross-Origin-Embedder-Policy", "require-corp")
@@ -147,8 +206,8 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
             "Content-Security-Policy",
             "; ".join([
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline'",
-                "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'",
+                f"script-src {' '.join(script_sources)}",
+                f"style-src {' '.join(style_sources)}",
                 "font-src 'self' https://cdn.jsdelivr.net data:",
                 "img-src 'self' data: blob:",
                 "connect-src 'self'",
