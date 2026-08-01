@@ -198,6 +198,10 @@ PARICHAY_CODE_CHALLENGE_METHOD = "S256"
 EVENT_ADMIN_ALLOWED_UPLOAD_IPS = ["10.250.221.87"] # change this ip to sir's or the testing computer ip
 EVENT_ADMIN_TRUST_X_FORWARDED_FOR = False #keep this true when running behind nginx.
 
+# HOD approvals are permitted only from the HOD's registered IP address.
+# Enable forwarded-header support only when a trusted reverse proxy overwrites it.
+HOD_APPROVAL_TRUST_X_FORWARDED_FOR = env_bool("HOD_APPROVAL_TRUST_X_FORWARDED_FOR", False)
+
 
 # EMAIL CONFIG
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

@@ -7,16 +7,83 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.http import HttpResponse
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 
 from .models import (
     CustomUser, EditRequest, MonthlyFill, MonthlySnapshot, QPRRecord, QuarterlyFill,
-    QuarterlySnapshot, Role, Section11SpecificAchievementsData, WeeklyFill, WeeklySnapshot
+    QuarterlySnapshot, Role, Section11SpecificAchievementsData, WeeklyFill, WeeklySnapshot,
+    ProfileChangeRequest
 )
 from .views import (
     _aggregate_section11_text_for_range, _rebuild_monthly_snapshot_from_source,
     is_period_overlapping, qpr_form, qpr_save_record, report_detail, report_list,
     request_qpr_edit
 )
+
+
+class HODApprovalIPTests(TestCase):
+    def setUp(self):
+        hod_role, _ = Role.objects.get_or_create(name='hod')
+        self.hod = CustomUser.objects.create_user(
+            username='hod-approval',
+            email='hod-approval@example.com',
+            password='password123',
+        )
+        self.hod.roles.add(hod_role)
+        self.hod.profile.roles.add(hod_role)
+        self.hod.profile.name = 'Approval HOD'
+        self.hod.profile.hod_name = 'Approval HOD'
+        self.hod.profile.ip_number = '10.10.10.10'
+        self.hod.profile.approval_status = 'approved'
+        self.hod.profile.save()
+
+        self.employee = CustomUser.objects.create_user(
+            username='approval-employee',
+            email='approval-employee@example.com',
+            password='password123',
+        )
+        self.employee.profile.employee_code = '900001'
+        self.employee.profile.hod_name = 'Approval HOD'
+        self.employee.profile.approval_status = 'pending'
+        self.employee.profile.save()
+        self.client.force_login(self.hod)
+
+    def test_hod_user_approval_is_blocked_from_unregistered_ip(self):
+        response = self.client.post(
+            reverse('process_user_approval', args=[self.employee.profile.id, 'approve']),
+            REMOTE_ADDR='10.10.10.11',
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.employee.profile.refresh_from_db()
+        self.assertEqual(self.employee.profile.approval_status, 'pending')
+
+    def test_hod_user_approval_is_allowed_from_registered_ip(self):
+        response = self.client.post(
+            reverse('process_user_approval', args=[self.employee.profile.id, 'approve']),
+            REMOTE_ADDR='10.10.10.10',
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.employee.profile.refresh_from_db()
+        self.assertEqual(self.employee.profile.approval_status, 'approved')
+
+    def test_hod_profile_change_approval_requires_registered_ip(self):
+        request = ProfileChangeRequest.objects.create(
+            profile=self.employee.profile,
+            hod=self.hod,
+            change_reason='Correct a designation',
+            requested_fields=['designation'],
+        )
+
+        response = self.client.post(
+            reverse('approve_profile_change', args=[request.id]),
+            REMOTE_ADDR='10.10.10.11',
+        )
+
+        self.assertEqual(response.status_code, 302)
+        request.refresh_from_db()
+        self.assertEqual(request.status, 'pending')
 
 
 class QPROverlapRestrictionTests(TestCase):

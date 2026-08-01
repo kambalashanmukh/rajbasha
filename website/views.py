@@ -307,6 +307,32 @@ def require_event_admin_ip(request):
     return HttpResponseForbidden(message)
 
 
+def _hod_approval_client_ip(request):
+    """Return the client IP without trusting spoofable headers by default."""
+    if getattr(settings, "HOD_APPROVAL_TRUST_X_FORWARDED_FOR", False):
+        return get_client_ip(request)
+    return request.META.get("REMOTE_ADDR")
+
+
+def hod_approval_ip_is_authorized(request):
+    """Allow HOD-only approvals only from an IP registered on that HOD's profile."""
+    profile = getattr(request.user, "profile", None)
+    allowed_ips = _split_ip_entries(getattr(profile, "ip_number", ""))
+    client_ip = _hod_approval_client_ip(request)
+
+    if _ip_matches_allowed_entries(client_ip, allowed_ips):
+        return True
+
+    log_audit(
+        request,
+        "blocked_hod_approval_ip",
+        "Approval",
+        f"{request.user.username} attempted an HOD approval from unauthorized IP {client_ip or 'unknown'}",
+        status="failure",
+    )
+    return False
+
+
 @login_required
 def get_event_images(request, folder):
     require_event_manager(request.user)
@@ -2574,12 +2600,17 @@ def profile_view(request):
     }
 
     return render(request, 'profile.html', context)
+@require_POST
 @login_required
 def approve_profile_change_hod(request, request_id):
     """HOD approves profile change request → unlock form"""
 
-    if not user_has_role(request.user, ['hod', 'admin']):
+    if not user_has_role(request.user, 'hod'):
         messages.error(request, "Unauthorized", extra_tags='danger')
+        return redirect('qpr_hod_detail_list')
+
+    if not hod_approval_ip_is_authorized(request):
+        messages.error(request, "Profile-change approvals are allowed only from your registered IP address.", extra_tags='danger')
         return redirect('qpr_hod_detail_list')
 
     change_request = get_object_or_404(ProfileChangeRequest, id=request_id)
@@ -2588,7 +2619,7 @@ def approve_profile_change_hod(request, request_id):
         messages.warning(request, "This request is already processed.")
         return redirect('qpr_hod_detail_list')
 
-    if change_request.hod != request.user and not request.user.is_staff:
+    if change_request.hod != request.user:
         messages.error(request, "Not authorized for this request", extra_tags='danger')
         return redirect('qpr_hod_detail_list')
 
@@ -2612,15 +2643,17 @@ def approve_profile_change_hod(request, request_id):
     )
 
     return redirect('qpr_hod_detail_list')
+@require_POST
 @login_required
 def reject_profile_change_hod(request, request_id):
     """HOD rejects profile change request → keep form locked"""
 
-    if request.method != 'POST':
+    if not user_has_role(request.user, 'hod'):
+        messages.error(request, "Unauthorized", extra_tags='danger')
         return redirect('qpr_hod_detail_list')
 
-    if not user_has_role(request.user, ['hod', 'admin']):
-        messages.error(request, "Unauthorized", extra_tags='danger')
+    if not hod_approval_ip_is_authorized(request):
+        messages.error(request, "Profile-change approvals are allowed only from your registered IP address.", extra_tags='danger')
         return redirect('qpr_hod_detail_list')
 
     change_request = get_object_or_404(ProfileChangeRequest, id=request_id)
@@ -2629,7 +2662,7 @@ def reject_profile_change_hod(request, request_id):
         messages.warning(request, "This request is already processed.")
         return redirect('qpr_hod_detail_list')
 
-    if change_request.hod != request.user and not request.user.is_staff:
+    if change_request.hod != request.user:
         messages.error(request, "Not authorized for this request", extra_tags='danger')
         return redirect('qpr_hod_detail_list')
 
@@ -8656,6 +8689,7 @@ def certificate_part2_delete(request, pk):
    
     return redirect('certificate_part2_list')
     
+@require_POST
 @login_required
 def process_user_approval(request, profile_id, action):
     if not user_has_role(request.user, ['hod', 'admin']):
@@ -8681,6 +8715,10 @@ def process_user_approval(request, profile_id, action):
         )
     
     if not can_process and is_hod and target_profile.approval_status == 'pending':
+        if not hod_approval_ip_is_authorized(request):
+            messages.error(request, "User approvals are allowed only from your registered IP address.")
+            return redirect(redirect_name)
+
         hod_profile = getattr(request.user, 'profile', None)
         hod_identifiers = {
             str(value).strip().lower()
