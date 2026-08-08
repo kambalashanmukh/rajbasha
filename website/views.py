@@ -2423,7 +2423,7 @@ def profile_view(request):
                     update_fields.append('designation')
 
                 if 'highest_exam' in approved_fields:
-                    employee.highest_exam = ",".join(request.POST.getlist("hindi_exam"))
+                    employee.highest_exam = request.POST.get( "highest_exam", employee.highest_exam)
                     update_fields.append('highest_exam')
 
                 if update_fields:
@@ -2509,7 +2509,7 @@ def profile_view(request):
             profile.save()
 
             emp_instance = form.save(commit=False)
-            emp_instance.highest_exam = ",".join(request.POST.getlist("hindi_exam"))
+            emp_instance.highest_exam = request.POST.get("highest_exam","")
             emp_instance.super_annuation_date = form.cleaned_data.get('super_annuation_date')
             emp_instance.empcode = empcode
             if not emp_instance.ename:
