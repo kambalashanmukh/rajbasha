@@ -184,6 +184,7 @@ class Employee(models.Model):
     GAZET_CHOICES = [
         ("Gazetted", "Gazetted"),
         ("Non-Gazetted", "Non-Gazetted"),
+        
     ]
     gazet = models.CharField(max_length=50, choices=GAZET_CHOICES)
     YES_NO_CHOICES = [
@@ -259,7 +260,7 @@ class Employee(models.Model):
         ("English", "English"),
         ("Both", "Both"),
     ]
-    typing = models.CharField(max_length=30, choices=TYPING_CHOICES)
+    typing = models.CharField(max_length=30, choices=TYPING_CHOICES,blank=True,null=True)
 
     hindiproficiency = models.CharField(
         max_length=30,
