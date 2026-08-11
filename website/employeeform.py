@@ -22,12 +22,21 @@ class EmployeeForm(forms.ModelForm):
             "empcode",
             "ename",
             "hname",
+
+            "mother_tongue",
+            "education_qualification",
+            "matric_medium",
+            "hindi_in_matric",
+            "hindi_in_graduation",
+
             "designation",
-            "typing",
+            "highest_exam",
             "hindiproficiency",
+            "official_work_in_hindi",
+
+            "typing",
             "gazet",
             "stenographer",
-            "highest_exam",
             "olic_affiliate",
         ]
 
@@ -42,6 +51,17 @@ class EmployeeForm(forms.ModelForm):
             "stenographer": "Stenographer",
             "highest_exam": "Highest Hindi Exam Passed",
             "olic_affiliate": "OLIC Affiliate",
+            "mother_tongue": "Mother Tongue",
+
+            "education_qualification": "Educational Qualification",
+
+            "matric_medium": "Medium of Examination of Matric or Equivalent",
+
+            "hindi_in_matric": "Whether Hindi was one of the subjects in Matric",
+
+            "hindi_in_graduation": "Whether Hindi was one of the subjects in Graduation",
+
+            "official_work_in_hindi": "How much of your official work do you perform in Hindi",
         }
 
         widgets = {
@@ -58,6 +78,30 @@ class EmployeeForm(forms.ModelForm):
                 attrs={"class": "form-control"}
             ),
 
+            "mother_tongue": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+
+            "education_qualification": forms.TextInput(
+                attrs={"class": "form-control"}
+            ),
+
+            "matric_medium": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+
+            "hindi_in_matric": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+
+            "hindi_in_graduation": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+
+            "official_work_in_hindi": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+            
             # Dropdowns (choices come automatically from model)
             "designation": forms.Select(
                 attrs={"class": "form-select"}

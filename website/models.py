@@ -184,11 +184,59 @@ class Employee(models.Model):
     GAZET_CHOICES = [
         ("Gazetted", "Gazetted"),
         ("Non-Gazetted", "Non-Gazetted"),
+        
     ]
     gazet = models.CharField(max_length=50, choices=GAZET_CHOICES)
     YES_NO_CHOICES = [
-        ("Yes", "Yes"),
-        ("No", "No"),
+    ("Yes", "Yes"),
+    ("No", "No"),
+    ]
+
+    MOTHER_TONGUE_CHOICES = [
+        ("Hindi", "Hindi"),
+        ("English", "English"),
+        ("Telugu", "Telugu"),
+        ("Tamil", "Tamil"),
+        ("Kannada", "Kannada"),
+        ("Malayalam", "Malayalam"),
+        ("Marathi", "Marathi"),
+        ("Gujarati", "Gujarati"),
+        ("Punjabi", "Punjabi"),
+        ("Bengali", "Bengali"),
+        ("Odia", "Odia"),
+        ("Urdu", "Urdu"),
+        ("Assamese", "Assamese"),
+        ("Other", "Other"),
+    ]
+
+    MEDIUM_CHOICES = [
+        ("Hindi", "Hindi"),
+        ("English", "English"),
+        ("Telugu", "Telugu"),
+        ("Tamil", "Tamil"),
+        ("Kannada", "Kannada"),
+        ("Malayalam", "Malayalam"),
+        ("Marathi", "Marathi"),
+        ("Gujarati", "Gujarati"),
+        ("Punjabi", "Punjabi"),
+        ("Bengali", "Bengali"),
+        ("Odia", "Odia"),
+        ("Urdu", "Urdu"),
+        ("Other", "Other"),
+    ]
+
+    HINDI_PROFICIENCY_CHOICES = [
+        ("Proficient", "Proficient"),
+        ("Working Knowledge", "Working Knowledge"),
+        ("Not at All", "Not at All"),
+    ]
+
+    OFFICIAL_WORK_CHOICES = [
+        ("Always", "Always"),
+        ("Mostly", "Mostly"),
+        ("Sometimes", "Sometimes"),
+        ("Rarely", "Rarely"),
+        ("Never", "Never"),
     ]
     stenographer = models.CharField(
         max_length=5,
@@ -197,6 +245,7 @@ class Employee(models.Model):
         null=True
     )
     Hindiexam_choices=[
+            ("None", "None"),
             ("Prabodh", "Prabodh"),
             ("Praveen", "Praveen"),
             ("Pragya", "Pragya"),
@@ -211,11 +260,11 @@ class Employee(models.Model):
         ("English", "English"),
         ("Both", "Both"),
     ]
-    typing = models.CharField(max_length=30, choices=TYPING_CHOICES)
+    typing = models.CharField(max_length=30, choices=TYPING_CHOICES,blank=True,null=True)
 
     hindiproficiency = models.CharField(
-        max_length=5,
-        choices=YES_NO_CHOICES,
+        max_length=30,
+        choices=HINDI_PROFICIENCY_CHOICES,
         blank=True,
         null=True)
     OLIC_AFFILIATE_CHOICES = [
@@ -230,6 +279,42 @@ class Employee(models.Model):
         choices=OLIC_AFFILIATE_CHOICES,
         blank=True,
         null=True
+    )
+    mother_tongue = models.CharField(
+        max_length=30,
+        choices=MOTHER_TONGUE_CHOICES,
+        blank=True,
+        null=True,
+    )
+
+    education_qualification = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+
+    matric_medium = models.CharField(
+        max_length=30,
+        choices=MEDIUM_CHOICES,
+        blank=True,
+        null=True,
+    )
+
+    hindi_in_matric = models.BooleanField(
+        null=True,
+        blank=True,
+    )
+
+    hindi_in_graduation = models.BooleanField(
+        null=True,
+        blank=True,
+    )
+
+    official_work_in_hindi = models.CharField(
+        max_length=20,
+        choices=OFFICIAL_WORK_CHOICES,
+        blank=True,
+        null=True,
     )
     status = models.CharField(
         max_length=10,

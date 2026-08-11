@@ -65,3 +65,23 @@ class ParichayService:
         response.raise_for_status()
 
         return response.json()
+    
+    @staticmethod
+    def get_user_details(access_token):
+        """
+        Fetch the authenticated user's details from Parichay.
+        """
+
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+
+        response = requests.get(
+            settings.PARICHAY_USERINFO_URL,
+            headers=headers,
+            timeout=30,
+        )
+
+        response.raise_for_status()
+
+        return response.json()

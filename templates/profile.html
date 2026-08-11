@@ -106,7 +106,7 @@
                     <i class="fas fa-clock"></i> {{ "Your registration is currently pending HOD approval. Your form is locked until you are verified."|t:current_lang }}
                 </div>
             {% endif %}
-            <div class="card shadow-lg border-0">
+            <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body p-5">
                     <form method="post" id="employeeForm" class="needs-validation">
                         {% csrf_token %}
@@ -138,7 +138,7 @@
 
                             </div>
                         </div>
-
+               
                         <h5 class="fw-bold text-primary mb-4 pb-2 border-bottom">
                             <i class="fas fa-building"></i> {{ "Office Information"|t:current_lang }}
                         </h5>
@@ -204,7 +204,7 @@
                                 <input type="email" name="alternate_email" id="alternate_email" class="form-control" value="{{ profile.alternate_email|default:'' }}" {% if not can_edit %}disabled{% endif %}>
                             </div>
                         </div>
-
+               
                         <h5 class="fw-bold text-primary mb-4 pb-2 border-bottom">
                             <i class="fas fa-user-tie"></i> {{ "Employee Information"|t:current_lang }}
                         </h5>
@@ -229,6 +229,138 @@
                                 {% if not can_edit %}disabled{% endif %}>
                             </div>
                         </div>
+                        <div class="row mb-4">
+
+                        <div class="col-md-6">
+                                <label class="form-label fw-bold">{{"Mother Tongue"|t:current_lang}}</label>
+                                <select name="mother_tongue"
+                                        class="form-select"
+                                        {% if not can_edit %}disabled{% endif %}>
+                                    <option value="">{{"--Select--"|t:current_lang}}</option>
+                                    {% for value,label in form.fields.mother_tongue.choices %}
+                                    <option value="{{ value }}"
+                                        {% if employee.mother_tongue == value %}selected{% endif %}>
+                                        {{ label |t:current_lang}}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    {{"Educational Qualification"|t:current_lang}}
+                                </label>
+
+                                <input type="text"
+                                    name="education_qualification"
+                                    class="form-control"
+                                    value="{{ employee.education_qualification|default:'' }}"
+                                    {% if not can_edit %}disabled{% endif %}>
+                            </div>
+
+                        </div>
+
+                        <div class="row mb-4">
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    {{"Medium of Examination of Matric"|t:current_lang}}
+                                </label>
+
+                                <select name="matric_medium"
+                                        class="form-select"
+                                        {% if not can_edit %}disabled{% endif %}>
+
+                                    <option value="">{{"--Select--"|t:current_lang}}</option>
+
+                                    {% for value,label in form.fields.matric_medium.choices %}
+                                    <option value="{{ value }}"
+                                        {% if employee.matric_medium == value %}selected{% endif %}>
+                                        {{label|t:current_lang}}
+                                    </option>
+                                    {% endfor %}
+
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    {{"Whether Hindi was one of the subjects in Matric"|t:current_lang}}
+                                </label>
+
+                                <select name="hindi_in_matric"
+                                        class="form-select"
+                                        {% if not can_edit %}disabled{% endif %}>
+
+                                    <option value="">{{"--Select--"|t:current_lang}}</option>
+                                    <option value="True"
+                                        {% if employee.hindi_in_matric %}selected{% endif %}>
+                                        {{"Yes"|t:current_lang}}
+                                    </option>
+
+                                    <option value="False"
+                                        {% if employee.hindi_in_matric == False %}selected{% endif %}>
+                                        {{"No"|t:current_lang}}
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="row mb-4">
+
+                            <div class="col-md-6">
+
+                                <label class="form-label fw-bold">
+                                    {{"Whether Hindi was one of the subjects in Graduation"|t:current_lang}}
+                                </label>
+
+                                <select name="hindi_in_graduation"
+                                        class="form-select"
+                                        {% if not can_edit %}disabled{% endif %}>
+
+                                    <option value="">-{{"-Select--"|t:current_lang}}</option>
+
+                                    <option value="True"
+                                        {% if employee.hindi_in_graduation %}selected{% endif %}>
+                                        {{"Yes"|t:current_lang}}
+                                    </option>
+
+                                    <option value="False"
+                                        {% if employee.hindi_in_graduation == False %}selected{% endif %}>
+                                        {{"No"|t:current_lang}}
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label class="form-label fw-bold">
+                                    {{"Official Work in Hindi"|t:current_lang}}
+                                </label>
+
+                                <select name="official_work_in_hindi"
+                                        class="form-select"
+                                        {% if not can_edit %}disabled{% endif %}>
+
+                                    <option value="">{{"--Select--"|t:current_lang}}</option>
+
+                                    {% for value,label in form.fields.official_work_in_hindi.choices %}
+                                    <option value="{{ value }}"
+                                        {% if employee.official_work_in_hindi == value %}selected{% endif %}>
+                                        {{ label|t:current_lang }}
+                                    </option>
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+                        </div>
 
                         <div class="row mb-4">
                             <div class="col-md-6">
@@ -237,92 +369,94 @@
                                 id="designation"
                                 class="form-select"
                                 {% if not can_edit %}disabled{% endif %}>
-                                <option value="">--Select--</option>
+                                <option value="">{{"--Select--"|t:current_lang}}</option>
                                 {% for value,label in form.fields.designation.choices %}
                                 <option value="{{ value }}"
                                 {% if employee.designation == value %}selected{% endif %}>
-                                {{ label }}
+                                {{ label|t:current_lang }}
                                 </option>
                                 {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Highest Hindi Exam Passed <span class="text-muted fw-normal">(select the applicable)</span></label>
-                                <div class="d-flex flex-wrap gap-2">
-                                    <input type="checkbox" class="btn-check" id="prabodh" name="hindi_exam" value="Prabodh"
-                                    {% if employee.highest_exam and "Prabodh" in employee.highest_exam %}checked{% endif %}>
-                                    <label class="btn btn-outline-primary" for="prabodh">Prabodh</label>
 
-                                    <input type="checkbox" class="btn-check" id="praveen" name="hindi_exam" value="Praveen"
-                                    {% if employee.highest_exam and "Praveen" in employee.highest_exam %}checked{% endif %}>
-                                    <label class="btn btn-outline-primary" for="praveen">Praveen</label>
+                                <label class="form-label fw-bold">
+                                    {{"Highest Hindi Examination Passed"|t:current_lang}}
+                                </label>
 
-                                    <input type="checkbox" class="btn-check" id="pragya" name="hindi_exam" value="Pragya"
-                                    {% if employee.highest_exam and "Pragya" in employee.highest_exam %}checked{% endif %}>
-                                    <label class="btn btn-outline-primary" for="pragya">Pragya</label>
+                                <select name="highest_exam"
+                                        class="form-select"
+                                        {% if not can_edit %}disabled{% endif %}>
 
-                                    <input type="checkbox" class="btn-check" id="parangat" name="hindi_exam" value="Parangat"
-                                    {% if employee.highest_exam and "Parangat" in employee.highest_exam %}checked{% endif %}>
-                                    <label class="btn btn-outline-primary" for="parangat">Parangat</label>
-                                </div>
+                                    <option value="">{{"--Select--"|t:current_lang}}</option>
+
+                                    {% for value,label in form.fields.highest_exam.choices %}
+                                    <option value="{{ value }}"
+                                        {% if employee.highest_exam == value %}selected{% endif %}>
+                                        {{ label|t:current_lang }}
+                                    </option>
+                                    {% endfor %}
+
+                                </select>
+
                             </div>
                         </div>
 
                         <div class="row mb-4">
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">Typing</label>
+                                <label class="form-label fw-bold">{{"Typing"|t:current_lang}}</label>
                                 <select name="typing"
                                 class="form-select"
                                 {% if not can_edit %}disabled{% endif %}>
-                                <option value="">--Select--</option>
+                                <option value="">{{"--Select--"|t:current_lang}}</option>
                                 {% for value,label in form.fields.typing.choices %}
                                 <option value="{{ value }}"
                                 {% if employee.typing == value %}selected{% endif %}>
-                                {{ label }}
+                                {{ label|t:current_lang}}
                                 </option>
                                 {% endfor %}
                                 </select>
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">Hindi Proficiency</label>
+                                <label class="form-label fw-bold">{{"Hindi Proficiency"|t:current_lang}}</label>
                                 <select name="hindiproficiency"
                                 class="form-select"
                                 {% if not can_edit %}disabled{% endif %}>
-                                <option value="">--Select--</option>
+                                <option value="">{{"--Select--"|t:current_lang}}</option>
                                 {% for value,label in form.fields.hindiproficiency.choices %}
                                 <option value="{{ value }}"
                                 {% if employee.hindiproficiency == value %}selected{% endif %}>
-                                {{ label }}
+                                {{ label|t:current_lang}}
                                 </option>
                                 {% endfor %}
                                 </select>
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">Gazet</label>
+                                <label class="form-label fw-bold">{{"Gazet"|t:current_lang}}</label>
                                 <select name="gazet"
                                 class="form-select"
                                 {% if not can_edit %}disabled{% endif %}>
-                                <option value="">--Select--</option>
+                                <option value="">{{"--Select--"|t:current_lang}}</option>
                                 {% for value,label in form.fields.gazet.choices %}
                                 <option value="{{ value }}"
                                 {% if employee.gazet == value %}selected{% endif %}>
-                                {{ label }}
+                                {{ label|t:current_lang}}
                                 </option>
                                 {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">Stenographer</label>
+                                <label class="form-label fw-bold">{{"Stenographer"|t:current_lang}}</label>
                                 <select name="stenographer"
                                 class="form-select"
                                 {% if not can_edit %}disabled{% endif %}>
-                                <option value="">--Select--</option>
+                                <option value="">{{"--Select--"|t:current_lang}}</option>
                                 {% for value,label in form.fields.stenographer.choices %}
                                 <option value="{{ value }}"
                                 {% if employee.stenographer == value %}selected{% endif %}>
-                                {{ label }}
+                                {{ label|t:current_lang }}
                                 </option>
                                 {% endfor %}
                                 </select>
@@ -335,11 +469,11 @@
                                 <select name="olic_affiliate"
                                 class="form-select"
                                 {% if not can_edit %}disabled{% endif %}>
-                                <option value="">--Select--</option>
+                                <option value="">{{"--Select--"|t:current_lang}}</option>
                                 {% for value,label in form.fields.olic_affiliate.choices %}
                                     <option value="{{ value }}"
                                     {% if employee.olic_affiliate == value %}selected{% endif %}>
-                                    {{ label }}
+                                    {{ label|t:current_lang}}
                                     </option>
                                 {% endfor %}
                                 </select>
@@ -358,8 +492,13 @@
 
                         <div class="d-flex gap-3 pt-3" id="actionRow">
                             <div class="d-flex gap-3">
-                                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" {% if not can_edit %}disabled{% endif %}>
-                                    <i class="fas fa-save"></i> {{ "Save Changes"|t:current_lang }}
+                               <button
+                                    type="submit"
+                                    id="submitBtn"
+                                    class="btn btn-primary btn-lg"
+                                    {% if not can_edit %}disabled{% endif %}>
+                                    <i class="fas fa-save"></i>
+                                    {{ "Save Changes"|t:current_lang }}
                                 </button>
                                 <a href="{% url 'qpr_user_dashboard' %}" class="btn btn-outline-secondary btn-lg">
                                     <i class="fas fa-times"></i> {{ "Cancel"|t:current_lang }}
@@ -716,7 +855,7 @@
         const pendingChangeAlert = document.getElementById('pendingChangeAlert');
         const requestChangeSection = document.getElementById('requestChangeSection');
 
-        setupExplicitSaveOnly();
+      //setupExplicitSaveOnly();
 
         console.log("DOMContentLoaded - Flags:", { profileLocked, hasPendingRequest, hasApprovedRequest, profileApproved, profileUpdated, profileApprovalRequired });
 
@@ -902,7 +1041,7 @@ function fetchEmployeeData() {
 
     empcodeField.addEventListener("blur", fetchEmployeeData);
 
-    const examCheckboxes = document.querySelectorAll("input[name='hindi_exam']");
+    const highestExamField = document.querySelector("select[name='highest_exam']");
     const typingField = document.querySelector("select[name='typing']");
     const proficiencyField = document.querySelector("select[name='hindiproficiency']");
 
@@ -911,25 +1050,50 @@ function fetchEmployeeData() {
     const originalTyping = typingField.value;
     const originalProficiency = proficiencyField.value;
 
-    examCheckboxes.forEach(cb => {
-        cb.addEventListener("change", function(){
+    let typingWasAutoSet = false;
+    let proficiencyWasAutoSet = false;
 
-            let selected = Array.from(examCheckboxes)
-                .filter(c => c.checked)
-                .map(c => c.value);
-
-            let shouldAuto = selected.some(val => triggerExams.includes(val));
-
-            if(shouldAuto){
-                typingField.value = "Both";
-                proficiencyField.value = "Yes";
-            } else {
-                typingField.value = originalTyping;
-                proficiencyField.value = originalProficiency;
-            }
-        });
+    typingField.addEventListener("change", function () {
+        typingWasAutoSet = false;
     });
 
+    proficiencyField.addEventListener("change", function () {
+        proficiencyWasAutoSet = false;
+    });
+
+    if (highestExamField) {
+        highestExamField.addEventListener("change", function () {
+
+            const selectedExam = this.value;
+            const shouldAuto = triggerExams.includes(selectedExam);
+
+            if (shouldAuto) {
+
+                if (!typingField.value || typingWasAutoSet) {
+                    typingField.value = "Both";
+                    typingWasAutoSet = true;
+                }
+
+                if (!proficiencyField.value || proficiencyWasAutoSet) {
+                    proficiencyField.value = "Yes";
+                    proficiencyWasAutoSet = true;
+                }
+
+            } else {
+
+                if (typingWasAutoSet) {
+                    typingField.value = originalTyping;
+                    typingWasAutoSet = false;
+                }
+
+                if (proficiencyWasAutoSet) {
+                    proficiencyField.value = originalProficiency;
+                    proficiencyWasAutoSet = false;
+                }
+            }
+        });
+    }
+    
     document.getElementById("designation").addEventListener("change", function(){
         setGazetFromDesignation();
     });
