@@ -446,18 +446,31 @@ class EmployeeMasterForm(forms.ModelForm):
     class Meta:
         model = EmployeeMaster
         fields = [
-            'empcode',
-            'name',
-            'hindi_name',
-            'designation',
-            'state',
-            'mobile',
-            'ip_number',
-            'emergency_contact',
-            'division',
-            'is_active',
-            'transferred_at',
-        ]
+    'name',
+    'empcode',
+    'government_email',
+    'mobile',
+    'retirement_date',
+    'designation',
+    'place_of_posting',
+    'mother_tongue',
+    'education_qualification',
+    'matric_medium',
+    'hindi_subject_matric',
+    'hindi_subject_graduation',
+    'highest_hindi_exam',
+    'hindi_knowledge',
+    'official_work_in_hindi',
+
+    # Existing Employee Master fields
+    'hindi_name',
+    'state',
+    'ip_number',
+    'emergency_contact',
+    'division',
+    'is_active',
+    'transferred_at',
+]
         widgets = {
             'empcode': forms.NumberInput(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -470,6 +483,19 @@ class EmployeeMasterForm(forms.ModelForm):
             'division': forms.TextInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'transferred_at': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'government_email': forms.EmailInput(attrs={'class': 'form-control'}),
+'retirement_date': forms.DateInput(
+    attrs={'class': 'form-control', 'type': 'date'}
+),
+'place_of_posting': forms.TextInput(attrs={'class': 'form-control'}),
+'mother_tongue': forms.TextInput(attrs={'class': 'form-control'}),
+'education_qualification': forms.TextInput(attrs={'class': 'form-control'}),
+'matric_medium': forms.TextInput(attrs={'class': 'form-control'}),
+'hindi_subject_matric': forms.Select(attrs={'class': 'form-select'}),
+'hindi_subject_graduation': forms.Select(attrs={'class': 'form-select'}),
+'highest_hindi_exam': forms.TextInput(attrs={'class': 'form-control'}),
+'hindi_knowledge': forms.Select(attrs={'class': 'form-select'}),
+'official_work_in_hindi': forms.TextInput(attrs={'class': 'form-control'}),
         }
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

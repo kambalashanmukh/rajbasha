@@ -140,6 +140,86 @@ class EmployeeMaster(models.Model):
     designation = models.CharField(max_length=255, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
     mobile = models.CharField(max_length=20, blank=True, null=True)
+    
+        # Additional Employee Master details
+
+    government_email = models.EmailField(
+        blank=True,
+        null=True
+    )
+
+    retirement_date = models.DateField(
+        blank=True,
+        null=True
+    )
+
+    place_of_posting = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    mother_tongue = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    education_qualification = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    matric_medium = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    YES_NO_CHOICES = [
+        ('Yes', 'Yes'),
+        ('No', 'No'),
+    ]
+
+    hindi_subject_matric = models.CharField(
+        max_length=3,
+        choices=YES_NO_CHOICES,
+        blank=True,
+        null=True
+    )
+
+    hindi_subject_graduation = models.CharField(
+        max_length=3,
+        choices=YES_NO_CHOICES,
+        blank=True,
+        null=True
+    )
+
+    highest_hindi_exam = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    HINDI_KNOWLEDGE_CHOICES = [
+        ('Proficient', 'Proficient'),
+        ('Working Knowledge', 'Working Knowledge'),
+        ('Not at All', 'Not at All'),
+    ]
+
+    hindi_knowledge = models.CharField(
+        max_length=30,
+        choices=HINDI_KNOWLEDGE_CHOICES,
+        blank=True,
+        null=True
+    )
+
+    official_work_in_hindi = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
     ip_number = models.CharField(max_length=50, blank=True, null=True)
     emergency_contact = models.CharField(max_length=20, blank=True, null=True)
     division = models.CharField(max_length=255, blank=True, null=True)

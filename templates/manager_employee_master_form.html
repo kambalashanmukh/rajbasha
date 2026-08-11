@@ -21,68 +21,139 @@
                     </div>
                 {% endif %}
 
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.empcode.id_for_label }}">Employee Code</label>
-                        {{ form.empcode }}
-                        {% if form.empcode.errors %}<div class="text-danger small mt-1">{{ form.empcode.errors|join:", " }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.name.id_for_label }}">Name</label>
-                        {{ form.name }}
-                        {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.hindi_name.id_for_label }}">Name in Hindi</label>
-                        {{ form.hindi_name }}
-                        {% if form.hindi_name.errors %}<div class="text-danger small mt-1">{{ form.hindi_name.errors|join:", " }}</div>{% endif %}
-                    </div>
+             <div class="row g-3">
 
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.designation.id_for_label }}">Designation</label>
-                        {{ form.designation }}
-                        {% if form.designation.errors %}<div class="text-danger small mt-1">{{ form.designation.errors|join:", " }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.state.id_for_label }}">State</label>
-                        {{ form.state }}
-                        {% if form.state.errors %}<div class="text-danger small mt-1">{{ form.state.errors|join:", " }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.mobile.id_for_label }}">Mobile</label>
-                        {{ form.mobile }}
-                        {% if form.mobile.errors %}<div class="text-danger small mt-1">{{ form.mobile.errors|join:", " }}</div>{% endif %}
-                    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Name</label>
+        {{ form.name }}
+        {% if form.name.errors %}
+            <div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>
+        {% endif %}
+    </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.ip_number.id_for_label }}">IP Number</label>
-                        {{ form.ip_number }}
-                        {% if form.ip_number.errors %}<div class="text-danger small mt-1">{{ form.ip_number.errors|join:", " }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.emergency_contact.id_for_label }}">Emergency Contact</label>
-                        {{ form.emergency_contact }}
-                        {% if form.emergency_contact.errors %}<div class="text-danger small mt-1">{{ form.emergency_contact.errors|join:", " }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.division.id_for_label }}">Division</label>
-                        {{ form.division }}
-                        {% if form.division.errors %}<div class="text-danger small mt-1">{{ form.division.errors|join:", " }}</div>{% endif %}
-                    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Employee Code</label>
+        {{ form.empcode }}
+        {% if form.empcode.errors %}
+            <div class="text-danger small mt-1">{{ form.empcode.errors|join:", " }}</div>
+        {% endif %}
+    </div>
 
-                    <div class="col-md-4">
-                        <div class="form-check mt-4 pt-2">
-                            {{ form.is_active }}
-                            <label class="form-check-label fw-semibold" for="{{ form.is_active.id_for_label }}">Active employee</label>
-                        </div>
-                        {% if form.is_active.errors %}<div class="text-danger small mt-1">{{ form.is_active.errors|join:", " }}</div>{% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="{{ form.transferred_at.id_for_label }}">Transferred At</label>
-                        {{ form.transferred_at }}
-                        {% if form.transferred_at.errors %}<div class="text-danger small mt-1">{{ form.transferred_at.errors|join:", " }}</div>{% endif %}
-                    </div>
-                </div>
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Name Based Government Email Id</label>
+        {{ form.government_email }}
+        {% if form.government_email.errors %}
+            <div class="text-danger small mt-1">{{ form.government_email.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Mobile Number</label>
+        {{ form.mobile }}
+        {% if form.mobile.errors %}
+            <div class="text-danger small mt-1">{{ form.mobile.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Date of Retirement</label>
+        {{ form.retirement_date }}
+        {% if form.retirement_date.errors %}
+            <div class="text-danger small mt-1">{{ form.retirement_date.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Designation</label>
+        {{ form.designation }}
+        {% if form.designation.errors %}
+            <div class="text-danger small mt-1">{{ form.designation.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Place of Posting</label>
+        {{ form.place_of_posting }}
+        {% if form.place_of_posting.errors %}
+            <div class="text-danger small mt-1">{{ form.place_of_posting.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Mother Tongue</label>
+        {{ form.mother_tongue }}
+        {% if form.mother_tongue.errors %}
+            <div class="text-danger small mt-1">{{ form.mother_tongue.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Education Qualifications</label>
+        {{ form.education_qualification }}
+        {% if form.education_qualification.errors %}
+            <div class="text-danger small mt-1">{{ form.education_qualification.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">
+            Medium of examination of Matric or Equivalent
+        </label>
+        {{ form.matric_medium }}
+        {% if form.matric_medium.errors %}
+            <div class="text-danger small mt-1">{{ form.matric_medium.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">
+            Whether Hindi was one of the subjects in Matric or Equivalent
+        </label>
+        {{ form.hindi_subject_matric }}
+        {% if form.hindi_subject_matric.errors %}
+            <div class="text-danger small mt-1">{{ form.hindi_subject_matric.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">
+            Whether Hindi was one of the subjects in Graduation or Equivalent
+        </label>
+        {{ form.hindi_subject_graduation }}
+        {% if form.hindi_subject_graduation.errors %}
+            <div class="text-danger small mt-1">{{ form.hindi_subject_graduation.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">
+            Highest Examination passed under Hindi Teaching Scheme (MHA)
+        </label>
+        {{ form.highest_hindi_exam }}
+        {% if form.highest_hindi_exam.errors %}
+            <div class="text-danger small mt-1">{{ form.highest_hindi_exam.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Possess knowledge of Hindi</label>
+        {{ form.hindi_knowledge }}
+        {% if form.hindi_knowledge.errors %}
+            <div class="text-danger small mt-1">{{ form.hindi_knowledge.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">
+            How much of your official work you perform in Hindi
+        </label>
+        {{ form.official_work_in_hindi }}
+        {% if form.official_work_in_hindi.errors %}
+            <div class="text-danger small mt-1">{{ form.official_work_in_hindi.errors|join:", " }}</div>
+        {% endif %}
+    </div>
+
+</div>
 
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-primary">{{ submit_label }}</button>

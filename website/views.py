@@ -2526,10 +2526,8 @@ def profile_view(request):
             profile.ip_number = request.POST.get('ip_number', '').strip() or (master_employee.ip_number or '').strip()
             profile.alternate_email = request.POST.get('alternate_email', '').strip()
 
-            if not profile_approval_required:
-                profile.approval_status = "approved"
-            elif profile.approval_status != "approved":
-                profile.approval_status = "pending_admin" if hod_name_post == "ADMIN" else "pending"
+           # Employee profiles no longer require HOD approval.
+            profile.approval_status = "approved"
 
             profile.profile_updated = True
             profile.save()
@@ -2559,10 +2557,7 @@ def profile_view(request):
             f"User {request.user.username} saved profile details for employee code {empcode}",
         )
         #send_system_email(user, request, 'update')
-        if profile_approval_required:
-            messages.success(request, "Profile submitted successfully! It is now awaiting HOD approval.")
-        else:
-            messages.success(request, "Profile saved successfully.")
+        messages.success(request, "Profile saved successfully.")
         return redirect('profile')
 
     empcode = profile.employee_code if profile else None
