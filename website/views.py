@@ -2370,7 +2370,7 @@ def profile_view(request):
     user = request.user
     profile = getattr(user, 'profile', None)
     scoped_profile_fields = {'email', 'alternate_email', 'designation', 'highest_exam', 'hod_name'}
-    profile_approval_required = not user_has_role(user, ['manager', 'admin'])
+    profile_approval_required = False
    
     pending_change_request = ProfileChangeRequest.objects.filter(
         profile=profile,
@@ -2798,9 +2798,7 @@ def user_dashboard(request):
     has_admin = 'ADMIN' in roles_up
     has_hod = 'HOD' in roles_up
 
-    disable_user_dashboard_actions = (
-        has_user and (has_manager or has_admin) and (not has_hod)
-    )
+    disable_user_dashboard_actions = False
 
     context = {
         'role': 'user',

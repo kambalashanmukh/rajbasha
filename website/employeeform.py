@@ -20,24 +20,15 @@ class EmployeeForm(forms.ModelForm):
 
         fields = [
             "empcode",
-            "ename",
-            "hname",
-
             "mother_tongue",
             "education_qualification",
             "matric_medium",
             "hindi_in_matric",
             "hindi_in_graduation",
-
             "designation",
             "highest_exam",
             "hindiproficiency",
             "official_work_in_hindi",
-
-            "typing",
-            "gazet",
-            "stenographer",
-            "olic_affiliate",
         ]
 
         labels = {

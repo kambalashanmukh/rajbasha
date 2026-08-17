@@ -341,12 +341,18 @@ class Employee(models.Model):
         ("Both", "Both"),
     ]
     typing = models.CharField(max_length=30, choices=TYPING_CHOICES,blank=True,null=True)
+    HINDI_PROFICIENCY_CHOICES = [
+        ("Proficient", "Proficient"),
+        ("Working Knowledge", "Working Knowledge"),
+        ("Not at All", "Not at All"),
+    ]
 
     hindiproficiency = models.CharField(
         max_length=30,
         choices=HINDI_PROFICIENCY_CHOICES,
         blank=True,
-        null=True)
+        null=True
+    )
     OLIC_AFFILIATE_CHOICES = [
         ('President', 'President'),
         ('Member Secretary', 'Member Secretary'),
