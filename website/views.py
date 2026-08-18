@@ -6716,7 +6716,7 @@ def qpr_save_record(request):
                 messages.error(request, "Invalid frequency")
                 return redirect('qpr_records')
 
-            if frequency in ['daily', 'weekly', 'monthly', 'quarterly'] and not selected_date_str:
+            if frequency in ['daily', 'weekly', 'monthly'] and not selected_date_str:
                 messages.error(request, "Date is required")
                 return redirect('qpr_records')
 
