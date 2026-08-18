@@ -106,6 +106,38 @@ function unlockQprFillControls() {
  }
 }
 
+// Single source of truth for selectedDate's visibility, enabled state, and
+// required state based on the current frequency. Quarterly hides+clears the
+// date (period comes from quarter+year instead); Daily/Weekly/Monthly show,
+// enable, and require it. Safe to call multiple times; respects the
+// approved-edit-period lock so it never fights with setApprovedEditPeriodLock().
+function updateSelectedDateVisibility() {
+ const frequencyEl = document.getElementById('frequency');
+ const selectedDateEl = document.getElementById('selectedDate');
+ const selectedDateContainer = document.getElementById('selectedDateContainer');
+ if (!frequencyEl || !selectedDateEl) return;
+
+ const isQuarterly = frequencyEl.value === 'quarterly';
+
+ if (selectedDateContainer) {
+ selectedDateContainer.classList.toggle('d-none', isQuarterly);
+ }
+
+ if (isQuarterly) {
+ selectedDateEl.value = '';
+ selectedDateEl.disabled = true;
+ selectedDateEl.required = false;
+ selectedDateEl.removeAttribute('required');
+ selectedDateEl.setCustomValidity('');
+ } else {
+ selectedDateEl.required = true;
+ selectedDateEl.setAttribute('required', 'required');
+ if (!window.QPR_APPROVED_EDIT_PERIOD_LOCKED) {
+ selectedDateEl.disabled = false;
+ }
+ }
+}
+
 // Function to mask sensitive fields
 function maskSensitiveData(value) {
  if (!value || value === '-') return '-';
@@ -337,6 +369,7 @@ function parseLocalDate(dateStr) {
  // initialize and fetch
  if (!selectedDateEl.value) selectedDateEl.value = (new Date()).toISOString().slice(0,10);
  unlockQprFillControls();
+ updateSelectedDateVisibility();
  fetchAvailability(selectedDateEl.value);
  updateMissingDaysAlert();
  updateAvailabilitySummary();
@@ -350,11 +383,12 @@ function parseLocalDate(dateStr) {
 
  if (frequencyEl) {
  frequencyEl.addEventListener('change', () => {
+ unlockQprFillControls();
+ updateSelectedDateVisibility();
  updateQuarterAvailability();
  updateMissingDaysAlert();
  updateAvailabilitySummary();
  
- unlockQprFillControls();
  // Draft is valid for normal QPR entry flows, including weekly/monthly/quarterly
  // entries used to fill missed daily periods. Hide it only for snapshot overwrites.
                 try {
@@ -1135,10 +1169,10 @@ function showTab(n) {
  const selectedTab = document.getElementById('tab' + n);
  if (selectedTab) selectedTab.classList.remove('d-none');
 
- // Update part badge to reflect current tab number (Part-1, Part-2, Part-3...)
+ // Update part badge to reflect current tab number (Page-1, Page-2, Page-3...)
  const partEl = document.getElementById('partBadge');
  if (partEl) {
- partEl.textContent = `Part-${n}`;
+ partEl.textContent = `Page-${n}`;
  }
 
  document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
