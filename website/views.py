@@ -2346,22 +2346,7 @@ def unarchive_user(request, archive_id):
         return redirect('dashboard')
    
 def _can_edit_profile(user, profile, pending_change_request=None):
-    if user_has_role(user, ['manager', 'admin']):
-        return True
-
-    if profile is None:
-        return True
-
-    if not profile.profile_updated:
-        return True
-
-    if pending_change_request is not None:
-        return False
-
-    if getattr(profile, 'approval_status', None) == 'rejected':
-        return True
-
-    return profile.approval_status == 'approved' and user.is_edit_allowed
+    return True
 
 
 @login_required

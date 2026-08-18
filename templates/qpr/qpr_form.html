@@ -24,15 +24,16 @@
  padding-bottom: 10px;
  color: #2c5a86;
  }
+.section-box {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
 
- .section-box {
- margin-bottom: 20px;
- padding: 15px;
- background: #f9f9f9;
- border-radius: 8px;
- border: 1px solid #e9ecef;
- }
-
+    align-self: flex-start;
+    height: auto;
+}
  #qprForm .form-control,
  #qprForm .form-select {
  border: 2px solid #000 !important;
@@ -168,7 +169,7 @@
  </div>
  {% endif %}
 
- <div class="col-md-6 section-box">
+ <div class="{% if has_hod_role %}col-md-6{% else %}col-md-12{% endif %} section-box">
  <div class="section-title">2. सचिव/समकक्ष स्तर पर बैठकों/फाइलों का ब्यौरा <span class="d-block small text-muted">(Details of meetings/files at Secretary/Equivalent level)</span></div>
  
  <div class="lbl-row">
@@ -214,7 +215,7 @@
  </div>
  {% endif %}
 
- <div class="col-md-6 section-box">
+ <div class="{% if active_role == 'admin' %}col-md-6{% else %}col-md-12{% endif %} section-box">
  <div class="section-title">4. हिंदी में प्राप्त पत्र (राजभाषा नियम - 5) <span class="d-block small text-muted">(Letters received in Hindi (Official Language Rule- 5))</span></div>
  
  <div class="lbl-row">
@@ -240,101 +241,330 @@
  <button type="button" class="btn btn-primary" onclick="showTab(2)">अगला पृष्ठ / Next &rarr;</button>
  </div>
  </div>
+<div id="tab2" class="d-none">
 
- <div id="tab2" class="d-none">
- <div class="row">
- <div class="col-md-6 section-box">
- <div class="section-title">5. अंग्रेजी में प्राप्त पत्रों के उत्तर हिंदी में दिए जाने/ क,ख क्षेत्र के लिये <span class="d-block small text-muted">(No.of letters received in English but replied in Hindi/For A and B Region)</span></div>
- 
- <p class="text-center fw-bold mb-2 small">'क' क्षेत्र से / From Region 'A'</p>
- 
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">अंग्रेजी में प्राप्त पत्रों की संख्या</span><span class="lbl-eng">(No.of letters received in English)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s5_total" name="s5_total"></div>
- </div>
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">इनमें से कितनों के उत्तर हिंदी में दिए गए</span><span class="lbl-eng">(No.of letters replied in Hindi)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s5_hindi" name="s5_hindi"></div>
- </div>
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">इनमें से कितनों के उत्तर अंग्रेजी में दिए गए</span><span class="lbl-eng">(How Many letters replied against these in English)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s5_english" name="s5_english"></div>
- </div>
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">इनमें से कितनों के उत्तर अपेक्षित नहीं थे</span><span class="lbl-eng">(No. of letters not expected to be replied)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s5_noreply" name="s5_noreply"></div>
- </div>
- </div>
+    <div class="row align-items-start">
 
- <div class="col-md-6 section-box">
- <div class="section-title">6. भेजे गये मूल पत्रों का ब्यौरा <span class="d-block small text-muted">(Details of total letters issued)</span></div>
- 
- <div class="mb-3 border-bottom pb-2">
- <strong class="d-block text-center text-primary mb-2 small">'क' क्षेत्र को / To Region 'A'</strong>
- <div class="lbl-row"><div class="lbl-text small">हिंदी/द्विभाषी में <br>(Issued in Hindi/Bilingual)</div><div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s6_a_hindi" name="s6_a_hindi"></div></div>
- <div class="lbl-row"><div class="lbl-text small">केवल अंग्रेजी में <br>(Issued in English only)</div><div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s6_a_eng" name="s6_a_eng"></div></div>
- <div class="lbl-row"><div class="lbl-text small">भेजे गए पत्रों की कुल संख्या <br>(Total no.of letters issued)</div><div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s6_a_total" name="s6_a_total"></div></div>
- </div>
+        <!-- LEFT COLUMN -->
+        <div class="col-md-6">
 
- <div class="mb-3 border-bottom pb-2">
- <strong class="d-block text-center text-primary mb-2 small">'ख' क्षेत्र को / To Region 'B'</strong>
- <div class="lbl-row"><div class="lbl-text small">हिंदी/द्विभाषी में <br>(Issued in Hindi/Bilingual)</div><div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s6_b_hindi" name="s6_b_hindi"></div></div>
- <div class="lbl-row"><div class="lbl-text small">केवल अंग्रेजी में <br>(Issued in English only)</div><div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s6_b_eng" name="s6_b_eng"></div></div>
- <div class="lbl-row"><div class="lbl-text small">भेजे गए पत्रों की कुल संख्या <br>(Total no.of letters Issued)</div><div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s6_b_total" name="s6_b_total"></div></div>
- </div>
+            <!-- SECTION 5 -->
+            <div class="section-box">
+                <div class="section-title">
+                    5. अंग्रेजी में प्राप्त पत्रों के उत्तर हिंदी में दिए जाने/ क,ख क्षेत्र के लिये
+                    <span class="d-block small text-muted">
+                        (No.of letters received in English but replied in Hindi/For A and B Region)
+                    </span>
+                </div>
 
- <div>
- <strong class="d-block text-center text-primary mb-2 small">'ग' क्षेत्र को / To Region 'C'</strong>
- <div class="lbl-row"><div class="lbl-text small">हिंदी/द्विभाषी में <br>(Issued in Hindi/Bilingual)</div><div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s6_c_hindi" name="s6_c_hindi"></div></div>
- <div class="lbl-row"><div class="lbl-text small">केवल अंग्रेजी में <br>(Issued in English only)</div><div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s6_c_eng" name="s6_c_eng"></div></div>
- <div class="lbl-row"><div class="lbl-text small">भेजे गए पत्रों की कुल संख्या <br>(Total no.of letters issued)</div><div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s6_c_total" name="s6_c_total"></div></div>
- </div>
- </div>
- </div>
+                <p class="text-center fw-bold mb-2 small">
+                    'क' क्षेत्र से / From Region 'A'
+                </p>
 
- <div class="row">
- <div class="col-md-6 section-box">
- <div class="section-title">7. (तिमाही के दौरान) फाइलों/दस्तावेजों पर लिखी गई टिप्पणियों का ब्यौरा <span class="d-block small text-muted">((During quarter) Details of Notings on files/documents)</span></div>
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">हिन्दी में लिखी गई टिप्पणियों के पृष्ठों की संख्या</span><span class="lbl-eng">(No. of pages with Notings in Hindi)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s7_hindi" name="s7_hindi"></div>
- </div>
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">अंग्रेजी में लिखी गई टिप्पणियों के पृष्ठों की संख्या</span><span class="lbl-eng">(No. of pages with Notings in English)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s7_eng" name="s7_eng"></div>
- </div>
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">कुल टिप्पणियों के पृष्ठों की संख्या</span><span class="lbl-eng">(No. of pages of total Notings)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s7_total" name="s7_total"></div>
- </div>
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">(ई ऑफिस के माध्यम से भेजी गयी टिप्पणियों का ब्यौरा)</span><span class="lbl-eng">(Details of comments sent through e-office)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s7_eoffice" name="s7_eoffice"></div>
- </div>
- </div>
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">अंग्रेजी में प्राप्त पत्रों की संख्या</span>
+                        <span class="lbl-eng">(No.of letters received in English)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s5_total" name="s5_total">
+                    </div>
+                </div>
 
- {% if active_role == 'manager' %}
- <div class="col-md-6 section-box">
- <div class="section-title">8. तिमाही में आयोजित हिंदी कार्यशालाएं <span class="d-block small text-muted">(Hindi Workshops in this Quarter)</span></div>
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">तिमाही के दौरान पूर्ण दिवसीय आयोजित कार्यशालाओं की संख्या</span><span class="lbl-eng">(No. of full day workshops conducted during the quarter)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s8_workshops" name="s8_workshops"></div>
- </div>
- <hr class="my-3">
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">प्रशिक्षित अधिकारियों की संख्या</span><span class="lbl-eng">(No. of Officers trained)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s8_officers" name="s8_officers"></div>
- </div>
- <div class="lbl-row">
- <div class="lbl-text"><span class="lbl-hindi">प्रशिक्षित कर्मचारियों की संख्या</span><span class="lbl-eng">(No. of employees trained)</span></div>
- <div class="lbl-input"><input type="number" min="0" max="999" class="form-control form-control-sm" id="s8_employees" name="s8_employees"></div>
- </div>
- </div>
- {% endif %}
- </div>
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">इनमें से कितनों के उत्तर हिंदी में दिए गए</span>
+                        <span class="lbl-eng">(No.of letters replied in Hindi)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s5_hindi" name="s5_hindi">
+                    </div>
+                </div>
+
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">इनमें से कितनों के उत्तर अंग्रेजी में दिए गए</span>
+                        <span class="lbl-eng">(How Many letters replied against these in English)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s5_english" name="s5_english">
+                    </div>
+                </div>
+
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">इनमें से कितनों के उत्तर अपेक्षित नहीं थे</span>
+                        <span class="lbl-eng">(No. of letters not expected to be replied)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s5_noreply" name="s5_noreply">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 6 -->
+            <div class="section-box">
+                <div class="section-title">
+                    6. भेजे गये मूल पत्रों का ब्यौरा
+                    <span class="d-block small text-muted">
+                        (Details of total letters issued)
+                    </span>
+                </div>
+
+                <!-- REGION A -->
+                <div class="mb-3 border-bottom pb-2">
+                    <strong class="d-block text-center text-primary mb-2 small">
+                        'क' क्षेत्र को / To Region 'A'
+                    </strong>
+
+                    <div class="lbl-row">
+                        <div class="lbl-text small">
+                            हिंदी/द्विभाषी में <br>(Issued in Hindi/Bilingual)
+                        </div>
+                        <div class="lbl-input">
+                            <input type="number" min="0" max="999"
+                                   class="form-control form-control-sm"
+                                   id="s6_a_hindi" name="s6_a_hindi">
+                        </div>
+                    </div>
+
+                    <div class="lbl-row">
+                        <div class="lbl-text small">
+                            केवल अंग्रेजी में <br>(Issued in English only)
+                        </div>
+                        <div class="lbl-input">
+                            <input type="number" min="0" max="999"
+                                   class="form-control form-control-sm"
+                                   id="s6_a_eng" name="s6_a_eng">
+                        </div>
+                    </div>
+
+                    <div class="lbl-row">
+                        <div class="lbl-text small">
+                            भेजे गए पत्रों की कुल संख्या <br>(Total no.of letters issued)
+                        </div>
+                        <div class="lbl-input">
+                            <input type="number" min="0" max="999"
+                                   class="form-control form-control-sm"
+                                   id="s6_a_total" name="s6_a_total">
+                        </div>
+                    </div>
+                </div>
 
 
- <div class="d-flex justify-content-between mt-4">
+                <!-- REGION B -->
+                <div class="mb-3 border-bottom pb-2">
+                    <strong class="d-block text-center text-primary mb-2 small">
+                        'ख' क्षेत्र को / To Region 'B'
+                    </strong>
+
+                    <div class="lbl-row">
+                        <div class="lbl-text small">
+                            हिंदी/द्विभाषी में <br>(Issued in Hindi/Bilingual)
+                        </div>
+                        <div class="lbl-input">
+                            <input type="number" min="0" max="999"
+                                   class="form-control form-control-sm"
+                                   id="s6_b_hindi" name="s6_b_hindi">
+                        </div>
+                    </div>
+
+                    <div class="lbl-row">
+                        <div class="lbl-text small">
+                            केवल अंग्रेजी में <br>(Issued in English only)
+                        </div>
+                        <div class="lbl-input">
+                            <input type="number" min="0" max="999"
+                                   class="form-control form-control-sm"
+                                   id="s6_b_eng" name="s6_b_eng">
+                        </div>
+                    </div>
+
+                    <div class="lbl-row">
+                        <div class="lbl-text small">
+                            भेजे गए पत्रों की कुल संख्या <br>(Total no.of letters Issued)
+                        </div>
+                        <div class="lbl-input">
+                            <input type="number" min="0" max="999"
+                                   class="form-control form-control-sm"
+                                   id="s6_b_total" name="s6_b_total">
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- REGION C -->
+                <div>
+                    <strong class="d-block text-center text-primary mb-2 small">
+                        'ग' क्षेत्र को / To Region 'C'
+                    </strong>
+
+                    <div class="lbl-row">
+                        <div class="lbl-text small">
+                            हिंदी/द्विभाषी में <br>(Issued in Hindi/Bilingual)
+                        </div>
+                        <div class="lbl-input">
+                            <input type="number" min="0" max="999"
+                                   class="form-control form-control-sm"
+                                   id="s6_c_hindi" name="s6_c_hindi">
+                        </div>
+                    </div>
+
+                    <div class="lbl-row">
+                        <div class="lbl-text small">
+                            केवल अंग्रेजी में <br>(Issued in English only)
+                        </div>
+                        <div class="lbl-input">
+                            <input type="number" min="0" max="999"
+                                   class="form-control form-control-sm"
+                                   id="s6_c_eng" name="s6_c_eng">
+                        </div>
+                    </div>
+
+                    <div class="lbl-row">
+                        <div class="lbl-text small">
+                            भेजे गए पत्रों की कुल संख्या <br>(Total no.of letters issued)
+                        </div>
+                        <div class="lbl-input">
+                            <input type="number" min="0" max="999"
+                                   class="form-control form-control-sm"
+                                   id="s6_c_total" name="s6_c_total">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            </div>
+
+
+            
+
+
+        <!-- RIGHT COLUMN -->
+        <div class="col-md-6">
+            <!-- SECTION 7 -->
+            <div class="section-box">
+                <div class="section-title">
+                    7. (तिमाही के दौरान) फाइलों/दस्तावेजों पर लिखी गई टिप्पणियों का ब्यौरा
+                    <span class="d-block small text-muted">
+                        ((During quarter) Details of Notings on files/documents)
+                    </span>
+                </div>
+
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">हिन्दी में लिखी गई टिप्पणियों के पृष्ठों की संख्या</span>
+                        <span class="lbl-eng">(No. of pages with Notings in Hindi)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s7_hindi" name="s7_hindi">
+                    </div>
+                </div>
+
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">अंग्रेजी में लिखी गई टिप्पणियों के पृष्ठों की संख्या</span>
+                        <span class="lbl-eng">(No. of pages with Notings in English)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s7_eng" name="s7_eng">
+                    </div>
+                </div>
+
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">कुल टिप्पणियों के पृष्ठों की संख्या</span>
+                        <span class="lbl-eng">(No. of pages of total Notings)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s7_total" name="s7_total">
+                    </div>
+                </div>
+
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">(ई ऑफिस के माध्यम से भेजी गयी टिप्पणियों का ब्यौरा)</span>
+                        <span class="lbl-eng">(Details of comments sent through e-office)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s7_eoffice" name="s7_eoffice">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 8 - MANAGER ONLY -->
+            {% if active_role == 'manager' %}
+            <div class="section-box">
+                <div class="section-title">
+                    8. तिमाही में आयोजित हिंदी कार्यशालाएं
+                    <span class="d-block small text-muted">
+                        (Hindi Workshops in this Quarter)
+                    </span>
+                </div>
+
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">
+                            तिमाही के दौरान पूर्ण दिवसीय आयोजित कार्यशालाओं की संख्या
+                        </span>
+                        <span class="lbl-eng">
+                            (No. of full day workshops conducted during the quarter)
+                        </span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s8_workshops" name="s8_workshops">
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">प्रशिक्षित अधिकारियों की संख्या</span>
+                        <span class="lbl-eng">(No. of Officers trained)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s8_officers" name="s8_officers">
+                    </div>
+                </div>
+
+                <div class="lbl-row">
+                    <div class="lbl-text">
+                        <span class="lbl-hindi">प्रशिक्षित कर्मचारियों की संख्या</span>
+                        <span class="lbl-eng">(No. of employees trained)</span>
+                    </div>
+                    <div class="lbl-input">
+                        <input type="number" min="0" max="999"
+                               class="form-control form-control-sm"
+                               id="s8_employees" name="s8_employees">
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
  <button type="button" class="btn btn-secondary" onclick="showTab(1)">&larr; पिछला पृष्ठ / Previous</button>
  <button type="button" class="btn btn-primary" onclick="showTab(3)">अगला पृष्ठ / Next &rarr;</button>
  </div>
