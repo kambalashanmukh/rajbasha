@@ -105,6 +105,29 @@ def reject_querystring_on_post(request):
 def is_valid_empcode(value):
     return bool(re.fullmatch(r"[0-9]{1,20}", value or ""))
 
+
+def is_valid_person_name(value):
+    """A person's name: must not be purely numeric or contain digits at all,
+    and must contain at least one alphabetic character. Allows spaces,
+    periods, hyphens, apostrophes (e.g. "Shri Guntuku Prasad", "O'Brien-Rao")."""
+    value = (value or "").strip()
+    if not value:
+        return True  # emptiness is handled separately by the required-field check
+    if any(ch.isdigit() for ch in value):
+        return False
+    if not any(ch.isalpha() for ch in value):
+        return False
+    return True
+
+
+def is_valid_phone_number(value):
+    """Mobile Number: digits only, with optional leading +, spaces or
+    hyphens for readability. Rejects any alphabetic character."""
+    value = (value or "").strip()
+    if not value:
+        return True  # emptiness is handled separately by the required-field check
+    return bool(re.fullmatch(r"[0-9+\-\s]{6,20}", value))
+
 def get_employee_details_form(request):
     if request.method == "POST":
         empcode = request.POST.get('empcode', '').strip()
@@ -2405,9 +2428,6 @@ def profile_view(request):
 
             if 'hod_name' in approved_fields:
                 hod_name_post = request.POST.get('hod_name', '').strip()
-                if profile_approval_required and not hod_name_post:
-                    messages.error(request, "HOD/Approver selection is required.")
-                    return redirect('profile')
                 profile.hod_name = hod_name_post
                 profile.save(update_fields=['hod_name'])
 
@@ -2448,8 +2468,14 @@ def profile_view(request):
         if not username:
             messages.error(request, "Employee Name is required.")
             return redirect('profile')
+        if not is_valid_person_name(username):
+            messages.error(request, "Name must not contain numbers.")
+            return redirect('profile')
         if not phone:
             messages.error(request, "Phone Number is required.")
+            return redirect('profile')
+        if not is_valid_phone_number(phone):
+            messages.error(request, "Phone Number must be numeric.")
             return redirect('profile')
 
         new_email = request.POST.get('email', '').lower().strip()
@@ -2460,11 +2486,8 @@ def profile_view(request):
         email_hash = hashlib.sha256(new_email.encode()).hexdigest()
 
         hod_name_post = request.POST.get('hod_name', '').strip()
-        if not profile_approval_required and not hod_name_post:
-            hod_name_post = "ADMIN"
-        if profile_approval_required and not hod_name_post:
-            messages.error(request, "HOD/Approver selection is required.")
-            return redirect('profile')
+
+        profile.hod_name = hod_name_post
 
         master_employee = EmployeeMaster.objects.filter(empcode=empcode, is_active=True).first()
         if not master_employee:
@@ -2503,8 +2526,7 @@ def profile_view(request):
             if not profile_approval_required:
                 profile.approval_status = "approved"
             elif profile.approval_status != "approved":
-                profile.approval_status = "pending_admin" if hod_name_post == "ADMIN" else "pending"
-
+                profile.approval_status = "pending_admin"
             profile.profile_updated = True
             profile.save()
 
@@ -2534,7 +2556,7 @@ def profile_view(request):
         )
         #send_system_email(user, request, 'update')
         if profile_approval_required:
-            messages.success(request, "Profile submitted successfully! It is now awaiting HOD approval.")
+            messages.success(request, "Profile submitted successfully! It is now awaiting Admin approval.")
         else:
             messages.success(request, "Profile saved successfully.")
         return redirect('profile')
@@ -3681,7 +3703,6 @@ def admin_dashboard(request):
     pending_requests = ManagerRequest.objects.filter(status='pending', hod__roles__name='user', hod__profile__office_state=admin_state)
     pending_admin_approvals = UserProfile.objects.filter(
             approval_status='pending_admin',
-            hod_name__iexact='ADMIN',
             office_state=admin_state,
         ).select_related('user', 'employee').order_by('-created_at')
     context = {
@@ -8658,46 +8679,27 @@ def certificate_part2_delete(request, pk):
     
 @login_required
 def process_user_approval(request, profile_id, action):
-    if not user_has_role(request.user, ['hod', 'admin']):
+    if not user_has_role(request.user, 'admin'):
         messages.error(request, "Unauthorized action.")
         return redirect('dashboard')
 
     target_profile = get_object_or_404(UserProfile, id=profile_id)
-    is_admin = user_has_role(request.user, 'admin')
-    is_hod = user_has_role(request.user, 'hod')
-    redirect_name = 'dashboard' if is_admin else 'qpr_hod_dashboard'
-    
+
     if action not in {'approve', 'reject'}:
         messages.error(request, "Invalid approval action.")
-        return redirect(redirect_name)
-    
-    can_process = False
-    if is_admin and target_profile.approval_status == 'pending_admin':
-        admin_state = getattr(getattr(request.user, 'profile', None), 'office_state', None)
-        can_process = (
-            (target_profile.hod_name or '').strip().upper() == 'ADMIN'
-            and bool(admin_state)
-            and (target_profile.office_state or '').strip().lower() == str(admin_state).strip().lower()
-        )
-    
-    if not can_process and is_hod and target_profile.approval_status == 'pending':
-        hod_profile = getattr(request.user, 'profile', None)
-        hod_identifiers = {
-            str(value).strip().lower()
-            for value in [
-                getattr(hod_profile, 'hod_name', None),
-                getattr(hod_profile, 'name', None),
-                getattr(hod_profile, 'employee_code', None),
-                getattr(request.user, 'username', None),
-            ]
-            if value
-        }
-        can_process = (target_profile.hod_name or '').strip().lower() in hod_identifiers
-    
+        return redirect('dashboard')
+
+    admin_state = getattr(getattr(request.user, 'profile', None), 'office_state', None)
+    can_process = (
+        target_profile.approval_status == 'pending_admin'
+        and bool(admin_state)
+        and (target_profile.office_state or '').strip().lower() == str(admin_state).strip().lower()
+    )
+
     if not can_process:
         messages.error(request, "You are not authorized to process this approval request.")
-        return redirect(redirect_name)
-   
+        return redirect('dashboard')
+
     if action == 'approve':
         master_record = Employee.objects.filter(empcode=target_profile.employee_code).first()
        
@@ -8731,7 +8733,7 @@ def process_user_approval(request, profile_id, action):
         #send_system_email(target_profile.user, request, 'rejected_alert')
         messages.warning(request, f"User {target_profile.employee_code} rejected.")
 
-    return redirect(redirect_name) 
+    return redirect('dashboard') 
 @login_required
 def backup_user_dashboard(request):
     context = {

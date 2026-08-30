@@ -21,47 +21,50 @@ class EmployeeForm(forms.ModelForm):
         fields = [
             "empcode",
             "ename",
-            "hname",
-
             "mother_tongue",
             "education_qualification",
             "matric_medium",
             "hindi_in_matric",
             "hindi_in_graduation",
-
             "designation",
             "highest_exam",
             "hindiproficiency",
             "official_work_in_hindi",
-
-            "typing",
-            "gazet",
-            "stenographer",
-            "olic_affiliate",
+            "super_annuation_date",
         ]
 
         labels = {
-            "empcode": "Empcode",
-            "ename": "Name in English",
-            "hname": "Name in Hindi",
-            "designation": "Designation",
-            "typing": "Typing",
-            "hindiproficiency": "Hindi Proficiency",
-            "gazet": "Gazet",
-            "stenographer": "Stenographer",
-            "highest_exam": "Highest Hindi Exam Passed",
-            "olic_affiliate": "OLIC Affiliate",
-            "mother_tongue": "Mother Tongue",
+            "empcode": "Emp. Code / कर्मचारी कोड",
+            "ename": "Name / नाम",
 
-            "education_qualification": "Educational Qualification",
+            "mother_tongue": "Mother Tongue / मातृ भाषा",
 
-            "matric_medium": "Medium of Examination of Matric or Equivalent",
+            "education_qualification":
+                "Education Qualifications / शैक्षणिक योग्यताएँ",
 
-            "hindi_in_matric": "Whether Hindi was one of the subjects in Matric",
+            "matric_medium":
+                "Medium of examination of Matric or Equivalent / मैट्रिक या समकक्ष परीक्षा का माध्यम",
 
-            "hindi_in_graduation": "Whether Hindi was one of the subjects in Graduation",
+            "hindi_in_matric":
+                "Whether Hindi was one of the subjects in Matric or Equivalent / क्या मैट्रिक या समकक्ष परीक्षा में हिंदी एक विषय था",
 
-            "official_work_in_hindi": "How much of your official work do you perform in Hindi",
+            "hindi_in_graduation":
+                "Whether Hindi was one of the subjects in Graduation or Equivalent / क्या स्नातक या समकक्ष परीक्षा में हिंदी एक विषय था",
+
+            "designation":
+                "Designation / पदनाम",
+
+            "highest_exam":
+                "Highest Examination passed under Hindi Teaching Scheme (MHA) / हिंदी शिक्षण योजना (गृह मंत्रालय) के अंतर्गत उत्तीर्ण उच्चतम परीक्षा",
+
+            "hindiproficiency":
+                "Possess knowledge of Hindi / हिंदी का ज्ञान",
+
+            "official_work_in_hindi":
+                "How much of your official work do you perform in Hindi / आप अपने सरकारी कार्य का कितना भाग हिंदी में करते हैं",
+
+            "super_annuation_date":
+                "Date of Retirement / सेवानिवृत्ति की तारीख",
         }
 
         widgets = {
@@ -71,11 +74,9 @@ class EmployeeForm(forms.ModelForm):
             ),
 
             "ename": forms.TextInput(
-                attrs={"class": "form-control"}
-            ),
-
-            "hname": forms.TextInput(
-                attrs={"class": "form-control"}
+                attrs={"class": "form-control",
+                       "style": "text-transform: uppercase;"
+                       }
             ),
 
             "mother_tongue": forms.Select(
@@ -83,7 +84,9 @@ class EmployeeForm(forms.ModelForm):
             ),
 
             "education_qualification": forms.TextInput(
-                attrs={"class": "form-control"}
+                attrs={"class": "form-control",
+                       "style": "text-transform: uppercase;"
+                       }
             ),
 
             "matric_medium": forms.Select(
@@ -107,19 +110,7 @@ class EmployeeForm(forms.ModelForm):
                 attrs={"class": "form-select"}
             ),
 
-            "typing": forms.Select(
-                attrs={"class": "form-select"}
-            ),
-
             "hindiproficiency": forms.Select(
-                attrs={"class": "form-select"}
-            ),
-
-            "gazet": forms.Select(
-                attrs={"class": "form-select"}
-            ),
-
-            "stenographer": forms.Select(
                 attrs={"class": "form-select"}
             ),
 
@@ -127,9 +118,6 @@ class EmployeeForm(forms.ModelForm):
                 attrs={"class": "form-select"}
             ),
 
-            "olic_affiliate": forms.Select(
-                attrs={"class": "form-select"}
-            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -143,3 +131,21 @@ class EmployeeForm(forms.ModelForm):
 
             if decrypted_date:
                 self.fields["super_annuation_date"].initial = decrypted_date
+
+    def clean_ename(self):
+        """Name field: reject any digit characters (e.g. "John123", "12345",
+        "123 John"), independent of any frontend/JS validation, so a direct
+        POST bypassing the browser is still rejected."""
+        value = (self.cleaned_data.get("ename") or "").strip()
+
+        if value:
+            if any(ch.isdigit() for ch in value):
+                raise forms.ValidationError(
+                    "Name must not contain numbers."
+                )
+            if not any(ch.isalpha() for ch in value):
+                raise forms.ValidationError(
+                    "Name must contain valid alphabetic characters."
+                )
+
+        return value.upper()
