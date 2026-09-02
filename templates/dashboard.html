@@ -184,12 +184,18 @@
     </td>
     <td class="text-center">
     <div class="btn-group btn-group-sm">
-    <a href="{% url 'process_user_approval' p.id 'approve' %}" class="btn btn-success" onclick="return confirm('{{ "Approve this user?"|t:current_lang }}');">
+    <form method="post" action="{% url 'process_user_approval' p.id 'approve' %}" class="d-inline" onsubmit="return confirm('{{ "Approve this user?"|t:current_lang }}');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success">
     <i class="fas fa-check"></i> {{ "Approve"|t:current_lang }}
-    </a>
-    <a href="{% url 'process_user_approval' p.id 'reject' %}" class="btn btn-danger" onclick="return confirm('{{ "Reject this user?"|t:current_lang }}');">
+    </button>
+    </form>
+    <form method="post" action="{% url 'process_user_approval' p.id 'reject' %}" class="d-inline" onsubmit="return confirm('{{ "Reject this user?"|t:current_lang }}');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">
     <i class="fas fa-times"></i> {{ "Reject"|t:current_lang }}
-    </a>
+    </button>
+    </form>
     </div>
     </td>
     </tr>

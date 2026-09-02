@@ -176,7 +176,7 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">{{ "Office Name"|t:current_lang }}</label>
-                                <select name="office_code" id="office_code_select" class="form-select" {% if not can_edit %}disabled{% endif %} required>
+                                <select name="office_code" id="office_code_select" class="form-select" {% if not can_edit %}disabled{% endif %} {% if not privileged_user %}required{% endif %}>
                                     <option value="">-- {{ "Select Office"|t:current_lang }} --</option>
                                     {% for o in offices %}
                                         <option value="{{ o.code }}" data-name="{{ o.name }}" data-state="{{ o.state|default:'' }}" {% if o.code == profile.office_code %}selected{% endif %}>{{ o.name }}</option>
@@ -363,7 +363,6 @@
                                         </option>
                                     {% endfor %}
                                 </select>
-                                <div class="form-text">{{ "HOD selection is for assignment only and does not require approval."|t:current_lang }}</div>
                             </div>
                         </div>
 

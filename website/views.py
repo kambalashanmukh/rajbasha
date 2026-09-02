@@ -2368,6 +2368,18 @@ def profile_view(request):
     profile = getattr(user, 'profile', None)
     scoped_profile_fields = {'email', 'alternate_email', 'designation', 'highest_exam', 'hod_name'}
     profile_approval_required = not user_has_role(user, ['manager', 'admin'])
+
+    # Admins, Managers and Superusers may complete their profile without an
+    # Office (needed so the very first privileged user can save their own
+    # profile before any Office exists, then create the initial Office).
+    # Computed once here so the POST-time validation and the GET-time
+    # template rendering (whether the Office field is actually required)
+    # always agree with each other.
+    privileged_user = (
+        user.is_superuser
+        or user_has_role(user, 'admin')
+        or user_has_role(user, 'manager')
+    )
    
     pending_change_request = ProfileChangeRequest.objects.filter(
         profile=profile,
@@ -2505,6 +2517,33 @@ def profile_view(request):
             messages.error(request, f"Form validation failed. {details}", extra_tags='danger')
             return redirect('profile')
 
+        # Office / Place of Posting is submitted as a hidden field driven by
+        # the employee's dropdown selection, so it must never be trusted
+        # as-is: the Office table is the source of truth. We look up the
+        # submitted code and derive office_name/office_state from that real
+        # record, rather than saving whatever office_name/office_state the
+        # browser happened to send.
+        office_code_post = request.POST.get('office_code', '').strip()
+
+        selected_office = None
+
+        if office_code_post:
+            selected_office = Office.objects.filter(code=office_code_post).first()
+
+            if not selected_office:
+                messages.error(
+                    request,
+                    "The selected office is invalid. Please choose a valid office from the list."
+                )
+                return redirect('profile')
+
+        elif not privileged_user:
+            messages.error(
+                request,
+                "Please select your Place of Posting (Office Name)."
+            )
+            return redirect('profile')
+
         with transaction.atomic():
             user.set_email(new_email)
             user.save()
@@ -2514,9 +2553,21 @@ def profile_view(request):
 
             profile.employee_code = empcode
             profile.phone = phone or (master_employee.mobile or '').strip()
-            profile.office_code = request.POST.get('office_code', '').strip()
-            profile.office_name = request.POST.get('office_name', '').strip()
-            profile.office_state = request.POST.get('office_state', '').strip() or (master_employee.state or '').strip()
+
+            if selected_office:
+                profile.office_code = selected_office.code
+                profile.office_name = selected_office.name
+                profile.office_state = (
+                    (selected_office.state or '').strip()
+                    or (master_employee.state or '').strip()
+                )
+            elif privileged_user:
+                # Office is intentionally allowed to remain empty
+                # for the first Admin/Manager/Superuser.
+                profile.office_code = ''
+                profile.office_name = ''
+                profile.office_state = (master_employee.state or '').strip()
+
             profile.email = new_email
             profile.language_region = request.POST.get('language_region', '')
             profile.hod_name = hod_name_post
@@ -2584,6 +2635,7 @@ def profile_view(request):
         'alternate_email': profile.alternate_email if profile else '',
         'super_annuation_date_value': super_annuation_date_value,
         'can_edit': can_edit,
+        'privileged_user': privileged_user,
         'profile_approval_required': profile_approval_required,
         'profile_locked': not can_edit,
         'profile_approved': is_approved,
@@ -8678,6 +8730,7 @@ def certificate_part2_delete(request, pk):
     return redirect('certificate_part2_list')
     
 @login_required
+@require_POST
 def process_user_approval(request, profile_id, action):
     if not user_has_role(request.user, 'admin'):
         messages.error(request, "Unauthorized action.")
