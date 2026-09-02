@@ -219,15 +219,31 @@
                         <!-- 7 & 8 -->
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">
-                                    7. पदस्थापन का स्थान / Place of posting:
-                                </label>
-                                <input type="text"
-                                       name="office_name"
-                                       id="office_name_field"
-                                       class="form-control"
-                                       value="{{ profile.office_name|default:'' }}"
-                                       {% if not can_edit %}disabled{% endif %}>
+      <label class="form-label fw-bold" style="color: #f8f9fa !important; opacity: 1 !important;">
+7. पदस्थापन का स्थान / Place of posting:
+</label>
+<select name="office_code"
+        id="office_code_select"
+        class="form-select"
+        {% if not can_edit %}disabled{% endif %}>
+
+    <option value="">-- Select Office --</option>
+
+    {% for o in offices %}
+        <option value="{{ o.code }}"
+                data-name="{{ o.name }}"
+                data-state="{{ o.state|default:'' }}"
+                {% if o.code == profile.office_code %}selected{% endif %}>
+            {{ o.name }}
+        </option>
+    {% endfor %}
+
+</select>
+
+<input type="hidden"
+       name="office_name"
+       id="office_name_field"
+       value="{{ profile.office_name|default:'' }}">
                             </div>
 
                             <div class="col-md-6">
@@ -944,80 +960,142 @@ function fetchEmployeeData() {
 
     empcodeField.addEventListener("blur", fetchEmployeeData);
 
-    const highestExamField = document.querySelector("select[name='highest_exam']");
-    const typingField = document.querySelector("select[name='typing']");
-    const proficiencyField = document.querySelector("select[name='hindiproficiency']");
+const highestExamField = document.querySelector("select[name='highest_exam']");
+const typingField = document.querySelector("select[name='typing']");
+const proficiencyField = document.querySelector("select[name='hindiproficiency']");
 
-    const triggerExams = ["Prabodh", "Praveen", "Pragya", "Parangat"];
+const triggerExams = ["Prabodh", "Praveen", "Pragya", "Parangat"];
 
-    const originalTyping = typingField.value;
-    const originalProficiency = proficiencyField.value;
+const originalTyping = typingField ? typingField.value : "";
+const originalProficiency = proficiencyField ? proficiencyField.value : "";
 
-    let typingWasAutoSet = false;
-    let proficiencyWasAutoSet = false;
+let typingWasAutoSet = false;
+let proficiencyWasAutoSet = false;
 
+if (typingField) {
     typingField.addEventListener("change", function () {
         typingWasAutoSet = false;
     });
+}
 
+if (proficiencyField) {
     proficiencyField.addEventListener("change", function () {
         proficiencyWasAutoSet = false;
     });
+}
 
-    if (highestExamField) {
-        highestExamField.addEventListener("change", function () {
+if (highestExamField) {
+    highestExamField.addEventListener("change", function () {
 
-            const selectedExam = this.value;
-            const shouldAuto = triggerExams.includes(selectedExam);
+        const selectedExam = this.value;
+        const shouldAuto = triggerExams.includes(selectedExam);
 
-            if (shouldAuto) {
+        if (shouldAuto) {
 
-                if (!typingField.value || typingWasAutoSet) {
-                    typingField.value = "Both";
-                    typingWasAutoSet = true;
-                }
-
-                if (!proficiencyField.value || proficiencyWasAutoSet) {
-                    proficiencyField.value = "Yes";
-                    proficiencyWasAutoSet = true;
-                }
-
-            } else {
-
-                if (typingWasAutoSet) {
-                    typingField.value = originalTyping;
-                    typingWasAutoSet = false;
-                }
-
-                if (proficiencyWasAutoSet) {
-                    proficiencyField.value = originalProficiency;
-                    proficiencyWasAutoSet = false;
-                }
+            if (typingField && (!typingField.value || typingWasAutoSet)) {
+                typingField.value = "Both";
+                typingWasAutoSet = true;
             }
-        });
-    }
-    
-    document.getElementById("designation").addEventListener("change", function(){
-        setGazetFromDesignation();
+
+            if (proficiencyField && (!proficiencyField.value || proficiencyWasAutoSet)) {
+                proficiencyField.value = "Yes";
+                proficiencyWasAutoSet = true;
+            }
+
+        } else {
+
+            if (typingField && typingWasAutoSet) {
+                typingField.value = originalTyping;
+                typingWasAutoSet = false;
+            }
+
+            if (proficiencyField && proficiencyWasAutoSet) {
+                proficiencyField.value = originalProficiency;
+                proficiencyWasAutoSet = false;
+            }
+        }
     });
+}
+       document.getElementById("designation").addEventListener("change", function(){
+    setGazetFromDesignation();
+});
 
-    (function() {
-        const officeSelect = document.getElementById('office_code_select');
-        const officeNameField = document.getElementById('office_name_field');
-        if (!officeSelect) return;
+document.addEventListener("DOMContentLoaded", function () {
 
-        const map = {};
-        for (let i = 0; i < officeSelect.options.length; i++) {
-            const opt = officeSelect.options[i];
-            if (!opt.value) continue;
-            map[opt.value] = opt.dataset.name || '';
+    const officeSelect = document.getElementById("office_code_select");
+    const officeNameField = document.getElementById("office_name_field");
+    const officeCodeField = document.querySelector('input[name="office_code"]');
+
+    if (!officeSelect) {
+        console.error("Office dropdown not found");
+        return;
+    }
+
+    if (!officeNameField) {
+        console.error("Office name hidden field not found");
+        return;
+    }
+
+    if (!officeCodeField) {
+        console.error("Office code hidden field not found");
+        return;
+    }
+
+    const currentOfficeCode = officeCodeField.value || "";
+    const currentOfficeName = officeNameField.value || "";
+
+    fetch("/qpr/api/offices/")
+        .then(function (response) {
+            if (!response.ok) {
+                throw new Error("Failed to load offices");
+            }
+
+            return response.json();
+        })m
+        .then(function (data) {
+
+
+            officeSelect.innerHTML =
+                '<option value="">-- Select Office --</option>';
+
+            data.offices.forEach(function (office) {
+
+                const option = document.createElement("option");
+
+                option.value = office.code;
+                option.textContent = office.name;
+                option.dataset.name = office.name;
+
+                if (
+                    office.code.toLowerCase() === currentOfficeCode.toLowerCase() ||
+                    (!currentOfficeCode && office.name === currentOfficeName)
+                ) {
+                    option.selected = true;
+                }
+
+                officeSelect.appendChild(option);
+            });
+        })
+        .catch(function (error) {
+            console.error("Office loading error:", error);
+        });
+
+    officeSelect.addEventListener("change", function () {
+
+        const selectedOption =
+            officeSelect.options[officeSelect.selectedIndex];
+
+        if (!selectedOption || !selectedOption.value) {
+            officeCodeField.value = "";
+            officeNameField.value = "";
+            return;
         }
 
-        officeSelect.addEventListener('change', function() {
-            officeNameField.value = map[this.value] || '';
-        });
-    })();
+        officeCodeField.value = selectedOption.value;
+        officeNameField.value = selectedOption.dataset.name || "";
+    });
 
+});
     document.addEventListener("DOMContentLoaded", function(){
         setGazetFromDesignation();
     });

@@ -105,6 +105,29 @@ def reject_querystring_on_post(request):
 def is_valid_empcode(value):
     return bool(re.fullmatch(r"[0-9]{1,20}", value or ""))
 
+
+def is_valid_person_name(value):
+    """A person's name: must not be purely numeric or contain digits at all,
+    and must contain at least one alphabetic character. Allows spaces,
+    periods, hyphens, apostrophes (e.g. "Shri Guntuku Prasad", "O'Brien-Rao")."""
+    value = (value or "").strip()
+    if not value:
+        return True  # emptiness is handled separately by the required-field check
+    if any(ch.isdigit() for ch in value):
+        return False
+    if not any(ch.isalpha() for ch in value):
+        return False
+    return True
+
+
+def is_valid_phone_number(value):
+    """Mobile Number: digits only, with optional leading +, spaces or
+    hyphens for readability. Rejects any alphabetic character."""
+    value = (value or "").strip()
+    if not value:
+        return True  # emptiness is handled separately by the required-field check
+    return bool(re.fullmatch(r"[0-9+\-\s]{6,20}", value))
+
 def get_employee_details_form(request):
     if request.method == "POST":
         empcode = request.POST.get('empcode', '').strip()
@@ -305,32 +328,6 @@ def require_event_admin_ip(request):
     if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.method == "POST":
         return JsonResponse({"status": "error", "message": message}, status=403)
     return HttpResponseForbidden(message)
-
-
-def _hod_approval_client_ip(request):
-    """Return the client IP without trusting spoofable headers by default."""
-    if getattr(settings, "HOD_APPROVAL_TRUST_X_FORWARDED_FOR", False):
-        return get_client_ip(request)
-    return request.META.get("REMOTE_ADDR")
-
-
-def hod_approval_ip_is_authorized(request):
-    """Allow HOD-only approvals only from an IP registered on that HOD's profile."""
-    profile = getattr(request.user, "profile", None)
-    allowed_ips = _split_ip_entries(getattr(profile, "ip_number", ""))
-    client_ip = _hod_approval_client_ip(request)
-
-    if _ip_matches_allowed_entries(client_ip, allowed_ips):
-        return True
-
-    log_audit(
-        request,
-        "blocked_hod_approval_ip",
-        "Approval",
-        f"{request.user.username} attempted an HOD approval from unauthorized IP {client_ip or 'unknown'}",
-        status="failure",
-    )
-    return False
 
 
 @login_required
@@ -2346,7 +2343,22 @@ def unarchive_user(request, archive_id):
         return redirect('dashboard')
    
 def _can_edit_profile(user, profile, pending_change_request=None):
-    return True
+    if user_has_role(user, ['manager', 'admin']):
+        return True
+
+    if profile is None:
+        return True
+
+    if not profile.profile_updated:
+        return True
+
+    if pending_change_request is not None:
+        return False
+
+    if getattr(profile, 'approval_status', None) == 'rejected':
+        return True
+
+    return profile.approval_status == 'approved' and user.is_edit_allowed
 
 
 @login_required
@@ -2355,7 +2367,19 @@ def profile_view(request):
     user = request.user
     profile = getattr(user, 'profile', None)
     scoped_profile_fields = {'email', 'alternate_email', 'designation', 'highest_exam', 'hod_name'}
-    profile_approval_required = False
+    profile_approval_required = not user_has_role(user, ['manager', 'admin'])
+
+    # Admins, Managers and Superusers may complete their profile without an
+    # Office (needed so the very first privileged user can save their own
+    # profile before any Office exists, then create the initial Office).
+    # Computed once here so the POST-time validation and the GET-time
+    # template rendering (whether the Office field is actually required)
+    # always agree with each other.
+    privileged_user = (
+        user.is_superuser
+        or user_has_role(user, 'admin')
+        or user_has_role(user, 'manager')
+    )
    
     pending_change_request = ProfileChangeRequest.objects.filter(
         profile=profile,
@@ -2416,9 +2440,6 @@ def profile_view(request):
 
             if 'hod_name' in approved_fields:
                 hod_name_post = request.POST.get('hod_name', '').strip()
-                if profile_approval_required and not hod_name_post:
-                    messages.error(request, "HOD/Approver selection is required.")
-                    return redirect('profile')
                 profile.hod_name = hod_name_post
                 profile.save(update_fields=['hod_name'])
 
@@ -2459,8 +2480,14 @@ def profile_view(request):
         if not username:
             messages.error(request, "Employee Name is required.")
             return redirect('profile')
+        if not is_valid_person_name(username):
+            messages.error(request, "Name must not contain numbers.")
+            return redirect('profile')
         if not phone:
             messages.error(request, "Phone Number is required.")
+            return redirect('profile')
+        if not is_valid_phone_number(phone):
+            messages.error(request, "Phone Number must be numeric.")
             return redirect('profile')
 
         new_email = request.POST.get('email', '').lower().strip()
@@ -2471,11 +2498,8 @@ def profile_view(request):
         email_hash = hashlib.sha256(new_email.encode()).hexdigest()
 
         hod_name_post = request.POST.get('hod_name', '').strip()
-        if not profile_approval_required and not hod_name_post:
-            hod_name_post = "ADMIN"
-        if profile_approval_required and not hod_name_post:
-            messages.error(request, "HOD/Approver selection is required.")
-            return redirect('profile')
+
+        profile.hod_name = hod_name_post
 
         master_employee = EmployeeMaster.objects.filter(empcode=empcode, is_active=True).first()
         if not master_employee:
@@ -2493,6 +2517,33 @@ def profile_view(request):
             messages.error(request, f"Form validation failed. {details}", extra_tags='danger')
             return redirect('profile')
 
+        # Office / Place of Posting is submitted as a hidden field driven by
+        # the employee's dropdown selection, so it must never be trusted
+        # as-is: the Office table is the source of truth. We look up the
+        # submitted code and derive office_name/office_state from that real
+        # record, rather than saving whatever office_name/office_state the
+        # browser happened to send.
+        office_code_post = request.POST.get('office_code', '').strip()
+
+        selected_office = None
+
+        if office_code_post:
+            selected_office = Office.objects.filter(code=office_code_post).first()
+
+            if not selected_office:
+                messages.error(
+                    request,
+                    "The selected office is invalid. Please choose a valid office from the list."
+                )
+                return redirect('profile')
+
+        elif not privileged_user:
+            messages.error(
+                request,
+                "Please select your Place of Posting (Office Name)."
+            )
+            return redirect('profile')
+
         with transaction.atomic():
             user.set_email(new_email)
             user.save()
@@ -2502,18 +2553,31 @@ def profile_view(request):
 
             profile.employee_code = empcode
             profile.phone = phone or (master_employee.mobile or '').strip()
-            profile.office_code = request.POST.get('office_code', '').strip()
-            profile.office_name = request.POST.get('office_name', '').strip()
-            profile.office_state = request.POST.get('office_state', '').strip() or (master_employee.state or '').strip()
+
+            if selected_office:
+                profile.office_code = selected_office.code
+                profile.office_name = selected_office.name
+                profile.office_state = (
+                    (selected_office.state or '').strip()
+                    or (master_employee.state or '').strip()
+                )
+            elif privileged_user:
+                # Office is intentionally allowed to remain empty
+                # for the first Admin/Manager/Superuser.
+                profile.office_code = ''
+                profile.office_name = ''
+                profile.office_state = (master_employee.state or '').strip()
+
             profile.email = new_email
             profile.language_region = request.POST.get('language_region', '')
             profile.hod_name = hod_name_post
             profile.ip_number = request.POST.get('ip_number', '').strip() or (master_employee.ip_number or '').strip()
             profile.alternate_email = request.POST.get('alternate_email', '').strip()
 
-           # Employee profiles no longer require HOD approval.
-            profile.approval_status = "approved"
-
+            if not profile_approval_required:
+                profile.approval_status = "approved"
+            elif profile.approval_status != "approved":
+                profile.approval_status = "pending_admin"
             profile.profile_updated = True
             profile.save()
 
@@ -2542,7 +2606,10 @@ def profile_view(request):
             f"User {request.user.username} saved profile details for employee code {empcode}",
         )
         #send_system_email(user, request, 'update')
-        messages.success(request, "Profile saved successfully.")
+        if profile_approval_required:
+            messages.success(request, "Profile submitted successfully! It is now awaiting Admin approval.")
+        else:
+            messages.success(request, "Profile saved successfully.")
         return redirect('profile')
 
     empcode = profile.employee_code if profile else None
@@ -2568,6 +2635,7 @@ def profile_view(request):
         'alternate_email': profile.alternate_email if profile else '',
         'super_annuation_date_value': super_annuation_date_value,
         'can_edit': can_edit,
+        'privileged_user': privileged_user,
         'profile_approval_required': profile_approval_required,
         'profile_locked': not can_edit,
         'profile_approved': is_approved,
@@ -2580,17 +2648,12 @@ def profile_view(request):
     }
 
     return render(request, 'profile.html', context)
-@require_POST
 @login_required
 def approve_profile_change_hod(request, request_id):
     """HOD approves profile change request → unlock form"""
 
-    if not user_has_role(request.user, 'hod'):
+    if not user_has_role(request.user, ['hod', 'admin']):
         messages.error(request, "Unauthorized", extra_tags='danger')
-        return redirect('qpr_hod_detail_list')
-
-    if not hod_approval_ip_is_authorized(request):
-        messages.error(request, "Profile-change approvals are allowed only from your registered IP address.", extra_tags='danger')
         return redirect('qpr_hod_detail_list')
 
     change_request = get_object_or_404(ProfileChangeRequest, id=request_id)
@@ -2599,7 +2662,7 @@ def approve_profile_change_hod(request, request_id):
         messages.warning(request, "This request is already processed.")
         return redirect('qpr_hod_detail_list')
 
-    if change_request.hod != request.user:
+    if change_request.hod != request.user and not request.user.is_staff:
         messages.error(request, "Not authorized for this request", extra_tags='danger')
         return redirect('qpr_hod_detail_list')
 
@@ -2623,17 +2686,15 @@ def approve_profile_change_hod(request, request_id):
     )
 
     return redirect('qpr_hod_detail_list')
-@require_POST
 @login_required
 def reject_profile_change_hod(request, request_id):
     """HOD rejects profile change request → keep form locked"""
 
-    if not user_has_role(request.user, 'hod'):
-        messages.error(request, "Unauthorized", extra_tags='danger')
+    if request.method != 'POST':
         return redirect('qpr_hod_detail_list')
 
-    if not hod_approval_ip_is_authorized(request):
-        messages.error(request, "Profile-change approvals are allowed only from your registered IP address.", extra_tags='danger')
+    if not user_has_role(request.user, ['hod', 'admin']):
+        messages.error(request, "Unauthorized", extra_tags='danger')
         return redirect('qpr_hod_detail_list')
 
     change_request = get_object_or_404(ProfileChangeRequest, id=request_id)
@@ -2642,7 +2703,7 @@ def reject_profile_change_hod(request, request_id):
         messages.warning(request, "This request is already processed.")
         return redirect('qpr_hod_detail_list')
 
-    if change_request.hod != request.user:
+    if change_request.hod != request.user and not request.user.is_staff:
         messages.error(request, "Not authorized for this request", extra_tags='danger')
         return redirect('qpr_hod_detail_list')
 
@@ -2783,7 +2844,9 @@ def user_dashboard(request):
     has_admin = 'ADMIN' in roles_up
     has_hod = 'HOD' in roles_up
 
-    disable_user_dashboard_actions = False
+    disable_user_dashboard_actions = (
+        has_user and (has_manager or has_admin) and (not has_hod)
+    )
 
     context = {
         'role': 'user',
@@ -3692,7 +3755,6 @@ def admin_dashboard(request):
     pending_requests = ManagerRequest.objects.filter(status='pending', hod__roles__name='user', hod__profile__office_state=admin_state)
     pending_admin_approvals = UserProfile.objects.filter(
             approval_status='pending_admin',
-            hod_name__iexact='ADMIN',
             office_state=admin_state,
         ).select_related('user', 'employee').order_by('-created_at')
     context = {
@@ -8667,53 +8729,30 @@ def certificate_part2_delete(request, pk):
    
     return redirect('certificate_part2_list')
     
-@require_POST
 @login_required
+@require_POST
 def process_user_approval(request, profile_id, action):
-    if not user_has_role(request.user, ['hod', 'admin']):
+    if not user_has_role(request.user, 'admin'):
         messages.error(request, "Unauthorized action.")
         return redirect('dashboard')
 
     target_profile = get_object_or_404(UserProfile, id=profile_id)
-    is_admin = user_has_role(request.user, 'admin')
-    is_hod = user_has_role(request.user, 'hod')
-    redirect_name = 'dashboard' if is_admin else 'qpr_hod_dashboard'
-    
+
     if action not in {'approve', 'reject'}:
         messages.error(request, "Invalid approval action.")
-        return redirect(redirect_name)
-    
-    can_process = False
-    if is_admin and target_profile.approval_status == 'pending_admin':
-        admin_state = getattr(getattr(request.user, 'profile', None), 'office_state', None)
-        can_process = (
-            (target_profile.hod_name or '').strip().upper() == 'ADMIN'
-            and bool(admin_state)
-            and (target_profile.office_state or '').strip().lower() == str(admin_state).strip().lower()
-        )
-    
-    if not can_process and is_hod and target_profile.approval_status == 'pending':
-        if not hod_approval_ip_is_authorized(request):
-            messages.error(request, "User approvals are allowed only from your registered IP address.")
-            return redirect(redirect_name)
+        return redirect('dashboard')
 
-        hod_profile = getattr(request.user, 'profile', None)
-        hod_identifiers = {
-            str(value).strip().lower()
-            for value in [
-                getattr(hod_profile, 'hod_name', None),
-                getattr(hod_profile, 'name', None),
-                getattr(hod_profile, 'employee_code', None),
-                getattr(request.user, 'username', None),
-            ]
-            if value
-        }
-        can_process = (target_profile.hod_name or '').strip().lower() in hod_identifiers
-    
+    admin_state = getattr(getattr(request.user, 'profile', None), 'office_state', None)
+    can_process = (
+        target_profile.approval_status == 'pending_admin'
+        and bool(admin_state)
+        and (target_profile.office_state or '').strip().lower() == str(admin_state).strip().lower()
+    )
+
     if not can_process:
         messages.error(request, "You are not authorized to process this approval request.")
-        return redirect(redirect_name)
-   
+        return redirect('dashboard')
+
     if action == 'approve':
         master_record = Employee.objects.filter(empcode=target_profile.employee_code).first()
        
@@ -8747,7 +8786,7 @@ def process_user_approval(request, profile_id, action):
         #send_system_email(target_profile.user, request, 'rejected_alert')
         messages.warning(request, f"User {target_profile.employee_code} rejected.")
 
-    return redirect(redirect_name) 
+    return redirect('dashboard') 
 @login_required
 def backup_user_dashboard(request):
     context = {

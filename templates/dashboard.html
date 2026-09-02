@@ -184,15 +184,15 @@
     </td>
     <td class="text-center">
     <div class="btn-group btn-group-sm">
-    <form action="{% url 'process_user_approval' p.id 'approve' %}" method="post" class="d-inline">
+    <form method="post" action="{% url 'process_user_approval' p.id 'approve' %}" class="d-inline" onsubmit="return confirm('{{ "Approve this user?"|t:current_lang }}');">
     {% csrf_token %}
-    <button type="submit" class="btn btn-success" onclick="return confirm('{{ "Approve this user?"|t:current_lang }}');">
+    <button type="submit" class="btn btn-success">
     <i class="fas fa-check"></i> {{ "Approve"|t:current_lang }}
     </button>
     </form>
-    <form action="{% url 'process_user_approval' p.id 'reject' %}" method="post" class="d-inline">
+    <form method="post" action="{% url 'process_user_approval' p.id 'reject' %}" class="d-inline" onsubmit="return confirm('{{ "Reject this user?"|t:current_lang }}');">
     {% csrf_token %}
-    <button type="submit" class="btn btn-danger" onclick="return confirm('{{ "Reject this user?"|t:current_lang }}');">
+    <button type="submit" class="btn btn-danger">
     <i class="fas fa-times"></i> {{ "Reject"|t:current_lang }}
     </button>
     </form>
@@ -530,7 +530,7 @@
  <div class="btn-group btn-group-sm">
 
  <!-- APPROVE -->
- <form action="{% url 'approve_profile_change' req.id %}" method="POST">
+ <form action="{% url 'approve_profile_change_hod' req.id %}" method="POST">
  {% csrf_token %}
  <button class="btn btn-success"
  onclick="return confirm('Approve this request?')">
@@ -539,7 +539,7 @@
  </form>
 
  <!-- REJECT -->
- <form action="{% url 'reject_profile_change' req.id %}" method="POST">
+ <form action="{% url 'reject_profile_change_hod' req.id %}" method="POST">
  {% csrf_token %}
  <button class="btn btn-danger"
  onclick="return confirm('Reject this request?')">
