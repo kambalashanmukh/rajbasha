@@ -5,47 +5,126 @@
 
 {% block extra_css %}
 <style>
-    .faq-page {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding-bottom: 5rem;
-    }
+:root{
+  --rbf-accent:#0e2f4c;
+  --rbf-blue:#155b91;
+  --rbf-gold:#a97a2f;
+  --rbf-gold-soft:#c99a4d;
 
-    .faq-header {
-        border-left: 5px solid #0d6efd;
-        padding-left: 1rem;
-        margin-bottom: 1.5rem;
-    }
+  --rbf-text:#0e2f4c;
+  --rbf-body:#1f2b38;
+  --rbf-muted:#5c6b7a;
+  --rbf-surface:#ffffff;
+  --rbf-tint:#f5f8fb;
+  --rbf-line:#e2e8f0;
+}
 
-    .faq-kicker {
-        color: #6c757d;
-        font-size: 0.95rem;
-        margin-bottom: 0.25rem;
-    }
+[data-bs-theme="dark"]{
+  --rbf-text:#e9f0f7;
+  --rbf-body:#cdd8e3;
+  --rbf-muted:#9db0c2;
+  --rbf-surface:#132539;
+  --rbf-tint:#182c43;
+  --rbf-line:#2b435f;
+  --rbf-gold-soft:#d6ac6c;
+}
 
-    .faq-topic {
-        margin-top: 1.5rem;
-    }
+.faq-page{
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.75rem 1rem 5rem;
+}
 
-    .faq-topic-title {
-        font-size: 1.15rem;
-        font-weight: 700;
-        margin-bottom: 0.75rem;
-    }
+.faq-header{
+  border-bottom: 1px solid var(--rbf-line);
+  padding-bottom: 1.75rem;
+  margin-bottom: 2.25rem;
+}
+.faq-kicker{
+  color: var(--rbf-gold-soft);
+  font-weight: 600;
+  font-size: .82rem;
+  margin-bottom: .4rem;
+}
+.faq-header h1{
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--rbf-text);
+  margin: 0 0 .5rem;
+}
+.faq-header p{
+  color: var(--rbf-muted);
+  margin: 0;
+  max-width: 60ch;
+  line-height: 1.6;
+}
 
-    .accordion-item {
-        border-color: #dee2e6;
-    }
+.faq-topic{ margin-top: 2.5rem; }
+.faq-topic:first-of-type{ margin-top: 0; }
 
-    .accordion-button {
-        font-weight: 600;
-    }
+.faq-topic-head{
+  display: flex; align-items: center; gap: .65rem;
+  margin-bottom: 1rem;
+}
+.faq-topic-num{
+  flex: 0 0 30px; width: 30px; height: 30px;
+  border-radius: 50%; background: var(--rbf-accent); color: #fff;
+  display: grid; place-items: center; font-size: .85rem; font-weight: 700;
+}
+.faq-topic-title{
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--rbf-text);
+  margin: 0;
+}
 
+.accordion-item{
+  border: 1px solid var(--rbf-line);
+  border-radius: 8px !important;
+  overflow: hidden;
+  margin-bottom: .6rem;
+  background: var(--rbf-surface);
+}
+.accordion-item:last-child{ margin-bottom: 0; }
 
-    .faq-answer {
+.accordion-button{
+  font-weight: 600;
+  font-size: .96rem;
+  color: var(--rbf-body);
+  padding: .95rem 1.2rem;
+  background: var(--rbf-surface);
+}
+.accordion-button:not(.collapsed){
+  color: var(--rbf-text);
+  background: var(--rbf-tint);
+  box-shadow: none;
+}
+.accordion-button:focus{
+  box-shadow: 0 0 0 3px rgba(21, 91, 145, .2);
+  border-color: var(--rbf-blue);
+}
+.accordion-button:hover{ background: var(--rbf-tint); }
+[data-bs-theme="dark"] .accordion-button::after{ filter: invert(1) grayscale(100); }
 
-        line-height: 1.65;
-    }
+.faq-answer{
+  line-height: 1.7;
+  color: var(--rbf-body);
+  font-size: .94rem;
+  padding: 1.1rem 1.2rem 1.3rem;
+  border-top: 1px solid var(--rbf-line);
+  background: var(--rbf-surface);
+}
+.faq-answer p{ margin: 0 0 .75rem; }
+.faq-answer p:last-child{ margin-bottom: 0; }
+.faq-answer img{
+  border: 1px solid var(--rbf-line);
+  border-radius: 8px;
+}
+
+@media (max-width: 575.98px){
+  .faq-page{ padding: 2rem 1rem 3.5rem; }
+  .faq-header h1{ font-size: 1.4rem; }
+}
 </style>
 {% endblock %}
 
@@ -53,14 +132,17 @@
 <section class="faq-page">
     <div class="faq-header">
         <div class="faq-kicker">{{ "Help Centre"|t:current_lang }}</div>
-        <h1 class="h3 fw-bold mb-1">{{ "Frequently Asked Questions"|t:current_lang }}</h1>
-        <p class="text-muted mb-0">
+        <h1>{{ "Frequently Asked Questions"|t:current_lang }}</h1>
+        <p>
             {{ "Find quick answers for registration, QPR reports, and employee profile updates."|t:current_lang }}
         </p>
     </div>
 
     <div class="faq-topic">
-        <h2 class="faq-topic-title">{{ "User Registration"|t:current_lang }}</h2>
+        <div class="faq-topic-head">
+            <div class="faq-topic-num">1</div>
+            <h2 class="faq-topic-title">{{ "User Registration"|t:current_lang }}</h2>
+        </div>
         <div class="accordion" id="registrationFaq">
             <div class="accordion-item">
                 <h3 class="accordion-header">
@@ -71,7 +153,7 @@
                 <div id="registrationOne" class="accordion-collapse collapse" data-bs-parent="#registrationFaq">
                     <div class="accordion-body faq-answer">
                         <p>{{ "A new user can open the sign up page, enter the required employee and contact details, verify the OTP, and submit the registration request for approval."|t:current_lang }}</p> 
-                        <img src="/static/images/faqs/Create_account.png" alt="Create Account Screen" class="img-fluid mt-3" style="max-width: 100%; border-radius: 0.5rem;">
+                        <img src="/static/images/faqs/Create_account.png" alt="Create Account Screen" class="img-fluid mt-3" style="max-width: 100%;">
                     </div>
                 </div>
             </div>
@@ -84,7 +166,7 @@
                 <div id="registrationTwo" class="accordion-collapse collapse" data-bs-parent="#registrationFaq">
                     <div class="accordion-body faq-answer">
                         <p>{{ "The user should provide the employee code, name, mobile number, email address, office or division details, and other information requested in the registration form."|t:current_lang }}</p>
-                        <img src="/static/images/faqs/fill_details.png" alt="Fill Details Screen" class="img-fluid mt-3" style="max-width: 100%; border-radius: 0.5rem;">
+                        <img src="/static/images/faqs/fill_details.png" alt="Fill Details Screen" class="img-fluid mt-3" style="max-width: 100%;">
                     </div>
                 </div>
             </div>
@@ -104,7 +186,10 @@
     </div>
 
     <div class="faq-topic">
-        <h2 class="faq-topic-title">{{ "QPR Update & Report Generation"|t:current_lang }}</h2>
+        <div class="faq-topic-head">
+            <div class="faq-topic-num">2</div>
+            <h2 class="faq-topic-title">{{ "QPR Update & Report Generation"|t:current_lang }}</h2>
+        </div>
         <div class="accordion" id="qprFaq">
             <div class="accordion-item">
                 <h3 class="accordion-header">
@@ -115,7 +200,7 @@
                 <div id="qprOne" class="accordion-collapse collapse" data-bs-parent="#qprFaq">
                     <div class="accordion-body faq-answer">
                         <p>{{ "Go to the fill Quarterly Progress Report section in the user dashboard. Select the relevant quarter, year and date. Fill in the necessary sections and submit the report."|t:current_lang }}</p>
-                        <img src="/static/images/faqs/QPR_fill.png" alt="QPR Fill Screen" class="img-fluid mt-3" style="max-width: 100%; border-radius: 0.5rem;">
+                        <img src="/static/images/faqs/QPR_fill.png" alt="QPR Fill Screen" class="img-fluid mt-3" style="max-width: 100%;">
                     </div>
                 </div>
             </div>
@@ -128,7 +213,7 @@
                 <div id="qprTwo" class="accordion-collapse collapse" data-bs-parent="#qprFaq">
                     <div class="accordion-body faq-answer">
                         <p>{{ "Yes, you can edit a submitted QPR report. Go to the view history in the user dashboard and request to edit the specific qpr that needed to be changed and wait for the manager approval to grant permission to edit that QPR."|t:current_lang }}</p>
-                        <img src="/static/images/faqs/Request_to_edit.png" alt="Request To Edit Screen" class="img-fluid mt-3" style="max-width: 100%; border-radius: 0.5rem;">
+                        <img src="/static/images/faqs/Request_to_edit.png" alt="Request To Edit Screen" class="img-fluid mt-3" style="max-width: 100%;">
                     </div>
                 </div>
             </div>
@@ -140,9 +225,9 @@
                 </h3>
                 <div id="qprThree" class="accordion-collapse collapse" data-bs-parent="#qprFaq">
                     <div class="accordion-body faq-answer">
-                      <p>  {{ "For users, Go to the View History and click on view of your specified qpr. Then you will be having a button to print or generate the report."|t:current_lang }}</p>
-                      <p>  {{ "For HODs Divisional QPR- Click on view and print in the divisional QPR section of HOD Dashboard."|t:current_lang }}</p>
-                      <p>  {{ "For manager, go to manager report in the manager dashboard and you can print the state QPR."|t:current_lang }}</p>
+                      <p>{{ "For users, Go to the View History and click on view of your specified qpr. Then you will be having a button to print or generate the report."|t:current_lang }}</p>
+                      <p>{{ "For HODs Divisional QPR- Click on view and print in the divisional QPR section of HOD Dashboard."|t:current_lang }}</p>
+                      <p>{{ "For manager, go to manager report in the manager dashboard and you can print the state QPR."|t:current_lang }}</p>
                     </div>
                 </div>
             </div>
@@ -162,7 +247,10 @@
     </div>
 
     <div class="faq-topic">
-        <h2 class="faq-topic-title">{{ "Employee Profile"|t:current_lang }}</h2>
+        <div class="faq-topic-head">
+            <div class="faq-topic-num">3</div>
+            <h2 class="faq-topic-title">{{ "Employee Profile"|t:current_lang }}</h2>
+        </div>
         <div class="accordion" id="profileFaq">
             <div class="accordion-item">
                 <h3 class="accordion-header">
@@ -173,7 +261,7 @@
                 <div id="profileOne" class="accordion-collapse collapse" data-bs-parent="#profileFaq">
                     <div class="accordion-body faq-answer">
                         <p>{{ "Open the profile page from the dashboard, update the permitted fields, and save the changes. Some fields may require approval before they are finalized."|t:current_lang }}</p>
-                        <img src="/static/images/faqs/edit_profile.png" alt="Edit Profile Screen" class="img-fluid mt-3" style="max-width: 100%; border-radius: 0.5rem;">
+                        <img src="/static/images/faqs/edit_profile.png" alt="Edit Profile Screen" class="img-fluid mt-3" style="max-width: 100%;">
                     </div>
                 </div>
             </div>

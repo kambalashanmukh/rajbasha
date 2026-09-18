@@ -28,7 +28,7 @@ SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000")) i
 SECURE_HSTS_INCLUDE_SUBDOMAINS = USE_HTTPS_SECURITY
 SECURE_HSTS_PRELOAD = USE_HTTPS_SECURITY
 
-ALLOWED_HOSTS = ["10.160.19.20", "192.168.56.101", "127.0.0.1", "localhost","192.168.1.8","10.64.61.87","10.250.221.87"]
+ALLOWED_HOSTS = ["10.160.19.20", "192.168.56.101", "127.0.0.1", "localhost","192.168.1.8","10.64.61.87","10.148.128.88","192.168.29.199","172.20.10.3","rajnet.nic.in"]
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
@@ -85,13 +85,16 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 
 CSRF_TRUSTED_ORIGINS = [
-  "http://10.250.221.87",
+   "http://172.20.10.3:8000",
+   "http://10.148.128.88:8000",
   "http://10.64.61.87:8000",
   "http://192.168.1.8:8000",
   "http://127.0.0.1:8000",
   "http://localhost:8000",
   "http://10.160.19.20:8000",
   "http://192.168.56.101:8000",
+  "http://192.168.29.199:8000",
+  "http://rajnet.nic.in:8000"
 ]
 
 
@@ -114,13 +117,12 @@ TEMPLATES = [
 
 
 DATABASES = {
-   'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5433'),
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 20,
+        },
     }
 }
 
@@ -196,8 +198,8 @@ PARICHAY_CODE_CHALLENGE_METHOD = "S256"
 
 
 # Event admin upload access is restricted by client IP in addition to login/role.
-EVENT_ADMIN_ALLOWED_UPLOAD_IPS = ["10.250.221.87"] # change this ip to sir's or the testing computer ip
-EVENT_ADMIN_TRUST_X_FORWARDED_FOR = False #keep this true when running behind nginx.
+EVENT_ADMIN_ALLOWED_UPLOAD_IPS = ["172.20.10.3"]#o sir's or the testing computer ip
+EVENT_ADMIN_TRUST_X_FORWARDED_FOR = True #keep this true when running behind nginx.
 
 # HOD approvals are permitted only from the HOD's registered IP address.
 # Enable forwarded-header support only when a trusted reverse proxy overwrites it.
@@ -222,9 +224,9 @@ SESSION_COOKIE_SECURE = USE_HTTPS_SECURITY
 # Keep False if your JS reads csrftoken from cookie.
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_AGE = None
-CSRF_COOKIE_SAMESITE = "Strict"
+CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "Strict"
+SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 SECURE_BROWSER_XSS_FILTER = True
@@ -262,9 +264,9 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 CSRF_COOKIE_AGE = None
 
 # SameSite policy for cookies
-SESSION_COOKIE_SAMESITE = 'Strict'
-CSRF_COOKIE_SAMESITE = 'Strict'
-LANGUAGE_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+LANGUAGE_COOKIE_SAMESITE = 'Lax'
 
 # Use cookie-backed messages and ensure its cookie uses SameSite=Strict
 MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'

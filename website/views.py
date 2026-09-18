@@ -1744,105 +1744,57 @@ def toggle_language(request):
     request.session['lang'] = 'hi' if current == 'en' else 'en'
     return redirect(request.META.get('HTTP_REFERER', 'home'))
 
-class CustomLoginView(LoginView):
-    authentication_form = CustomLoginForm
-    template_name = 'registration/login.html'
+class CustomLoginView(View):
 
-    def get_success_url(self):
-        return reverse('dashboard')
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("dashboard")
 
-    def form_valid(self, form):
-        user = cast(CustomUser, form.get_user())
-        current_lang = self.request.session.get('lang', 'en')
-       
-        email_choice = form.cleaned_data.get('email_choice', 'primary')
-        target_email = user.get_email()
-        profile = getattr(user, 'profile', None)
-        alternate_email = getattr(profile, 'alternate_email', None)
+        lang = request.session.get("lang", "en")
 
-        if email_choice == 'alternate':
-            if alternate_email:
-                target_email = alternate_email
-            else:
-                messages.warning(self.request, translate_text("No alternate email found in your profile. Sending to official email.", current_lang))
-
-        #send_otp_email(user, current_lang, target_email=target_email, email_type='login_otp')
-
-        try:
-            self.request.session['pre_login_user_id'] = user.id
-            self.request.session['login_target_email'] = target_email
-            self.request.session['is_login_otp'] = True
-            self.request.session['lang'] = current_lang
-            self.request.session.modified = True
-
-            messages.success(self.request, translate_text("OTP sent successfully.", current_lang))
-            return redirect('verify_otp')
-        except Exception:
-            payload = {'pre_login_user_id': user.id}
-            token = signing.dumps(payload, salt='login_otp')
-            verify_url = reverse('verify_otp') + f'?otp_token={token}'
-            messages.success(self.request, translate_text("OTP sent successfully.", current_lang))
-            return redirect(verify_url)
-
-    def form_invalid(self, form):
-        username = form.data.get('username')
-        user = CustomUser.objects.filter(username=username).first()
-        raw_password = form.data.get('password')
-        if not isinstance(raw_password, str):
-            return super().form_invalid(form)
-
-        if user and not user.is_active and user.check_password(raw_password):
-            lang = self.request.session.get('lang', 'en')
-            messages.error(self.request, translate_text("Your account has been archived. Please contact the admin.", lang))
-            return self.render_to_response(self.get_context_data(form=form))
-        log_audit(
-            self.request,
-            'failed_login',
-            'CustomUser',
-            f"Failed login attempt for username {username or 'unknown'}",
-            status='failure',
+        return render(
+            request,
+            "registration/login.html",
+            {
+                "current_lang": lang,
+            }
         )
-        return super().form_invalid(form)
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'request': self.request})
-        return kwargs
 
 def signup(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
+    return redirect("parichay_login")
+#    if request.user.is_authenticated:
+#       return redirect('dashboard')
 
-    lang = request.session.get('lang', 'en')
-    form = CustomUserCreationForm(request.POST or None, request=request)
+#    lang = request.session.get('lang', 'en')
+#    form = CustomUserCreationForm(request.POST or None, request=request)
 
-    if request.method == "POST":
-        if form.is_valid():
-            user = form.save(commit=False)
+#   if request.method == "POST":
+#       if form.is_valid():
+#            user = form.save(commit=False)
+#
+#            employee_code = request.POST.get('employee_code', '').strip()
+#            phone = request.POST.get('phone', '').strip()
 
-            employee_code = request.POST.get('employee_code', '').strip()
-            phone = request.POST.get('phone', '').strip()
-
-            otp = str(secrets.randbelow(900000) + 100000)
-            signup_data = {
-                'username': user.username,
-                'email': form.cleaned_data['email'],
-                'password': user.password,
-                'first_name': user.first_name,
-                'otp': otp,
-                'otp_time': timezone.now().timestamp()
-            }
-            request.session['signup_data'] = signup_data
-            request.session['is_signup'] = True
+#            otp = str(secrets.randbelow(900000) + 100000)
+#            signup_data = {
+#                'username': user.username,
+#                'email': form.cleaned_data['email'],
+#                'password': user.password,
+#                'first_name': user.first_name,
+#                'otp': otp,
+#               'otp_time': timezone.now().timestamp()
+#            }
+#            request.session['signup_data'] = signup_data
+#            request.session['is_signup'] = True
 
             #send_system_email(user, request, 'otp', extra_context={'otp': otp, 'lang': lang})
 
-            messages.success(request, "Account verification initiated! Please verify your email with the OTP sent.")
-            return redirect('verify_otp')
-        else:
-            messages.error(request, "Please correct the errors below.")
+#            messages.success(request, "Account verification initiated! Please verify your email with the OTP sent.")
+#            return redirect('verify_otp')
+#        else:
+#            messages.error(request, "Please correct the errors below.")
 
-    return render(request, 'registration/signup.html', {'form': form})
+#    return render(request, 'registration/signup.html', {'form': form})
 
 class LoginOTPView(View):
     def get(self, request):
@@ -2828,8 +2780,6 @@ def user_dashboard(request):
         defaults={"employee_code": f"EMP{getattr(request.user, 'id', '')}"}
     )
     profile.refresh_from_db()
-    if not profile.profile_updated:
-        return redirect('qpr_user_profile')
     qpr_records = QPRRecord.objects.filter(user=request.user)
     today = timezone.localdate()
     submitted_qprs = QPRRecord.objects.filter(user=request.user, is_submitted=True, frequency__iexact='daily', period_start=today).count()
@@ -4140,8 +4090,16 @@ def manage_user_action(request, user_id, action):
 @login_required
 def qpr_form(request):
     profile = getattr(request.user, 'profile', None)
-    if not profile or profile.approval_status != 'approved':
-        messages.error(request, "Access Denied: Your account must be approved by your HOD before you can submit a QPR.")
+
+    if (
+        not profile
+        or not profile.profile_updated
+        or profile.approval_status != 'approved'
+    ):
+        messages.error(
+            request,
+            "Please complete your profile and wait for approval before accessing QPR."
+        )
         return redirect('dashboard')
    
     ensure_current_financial_year()
@@ -6556,7 +6514,24 @@ def qpr_records_view(request):
 
 @login_required
 def qpr_user_report_list(request):
-    records = QPRRecord.objects.filter(user=request.user, frequency__iexact='quarterly').order_by('-period_start')
+    profile = getattr(request.user, 'profile', None)
+
+    if (
+        not profile
+        or not profile.profile_updated
+        or profile.approval_status != 'approved'
+    ):
+        messages.error(
+            request,
+            "Please complete your profile and wait for approval before accessing QPR reports."
+        )
+        return redirect('dashboard')
+
+    records = QPRRecord.objects.filter(
+        user=request.user,
+        frequency__iexact='quarterly'
+    ).order_by('-period_start')
+
     return render(request, 'qpr/user_report_list.html', {
         'records': records
     })

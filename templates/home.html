@@ -6,118 +6,149 @@
 
 {% block extra_css %}
 <style>
-    /* 1. Global Page Layout */
-    body {
-        overflow-x: hidden;
-    }
+:root{
+  --rbh-accent:#0e2f4c;
+  --rbh-blue:#155b91;
+  --rbh-blue-deep:#0c3f66;
+  --rbh-gold:#a97a2f;
+  --rbh-gold-soft:#c99a4d;
 
-    /* 2. Main Carousel Styling */
-    .full-screen-banner {
-        width: 100vw;
-        position: relative;
-        left: 50%;
-        right: 50%;
-        margin-left: -50vw;
-        margin-right: -50vw;
-        margin-top: -1.5rem; 
-        margin-bottom: 2rem;
-    }
-     
-    .carousel-item img {
-    width: 100%;
-    height: 450px;
-    object-fit: contain; /* Shows the full image without cropping */
-    background-color: #f8f9fa; /* Adds a light background to fill gaps on the sides */
+  --rbh-text:#0e2f4c;
+  --rbh-body:#1f2b38;
+  --rbh-muted:#5c6b7a;
+  --rbh-surface:#ffffff;
+  --rbh-tint:#f5f8fb;
+  --rbh-line:#e2e8f0;
+  --rbh-hero-bg:#eaf1f8;
 }
 
-    /* 3. News Slider Card Styling */
-    .news-card {
-        border: none !important;
-        border-radius: 20px !important; 
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        height: 100%;
-        background: #fff;
-        padding-bottom: 10px;
-        transition: transform 0.3s ease;
-        cursor: pointer;
-    }
+[data-bs-theme="dark"]{
+  --rbh-text:#e9f0f7;
+  --rbh-body:#cdd8e3;
+  --rbh-muted:#9db0c2;
+  --rbh-surface:#132539;
+  --rbh-tint:#182c43;
+  --rbh-line:#2b435f;
+  --rbh-hero-bg:#0a1826;
+  --rbh-gold-soft:#d6ac6c;
+}
 
-    .news-card:hover {
-        transform: translateY(-5px);
-    }
+body{ overflow-x:hidden; }
+main.container{ max-width:100% !important; padding-left:0 !important; padding-right:0 !important; }
 
-    .news-card-img-wrapper {
-        padding: 12px;
-    }
+.content-container{ max-width:1200px; margin:0 auto; padding:0 20px; }
 
-    .news-card img {
-        width: 100%;
-        height: 220px;
-        object-fit: cover;
-        border-radius: 12px;
-    }
+/* ---------- Hero ---------- */
+.full-screen-banner{
+  width:100vw; position:relative; left:50%; margin-left:-50vw;
+  margin-top:-1.5rem; margin-bottom:0; background:var(--rbh-hero-bg);
+  transition:background-color .2s ease;
+}
+.main-carousel-shell{ overflow:hidden; }
+.carousel-item img{
+  width:100%; height:clamp(280px, 40vw, 480px);
+  object-fit:contain; background:var(--rbh-hero-bg);
+  transition:background-color .2s ease;
+}
+#mainCarousel .carousel-control-prev,
+#mainCarousel .carousel-control-next{ width:6%; opacity:0; transition:opacity .2s ease; }
+.full-screen-banner:hover .carousel-control-prev,
+.full-screen-banner:hover .carousel-control-next{ opacity:.85; }
+.carousel-control-prev-icon, .carousel-control-next-icon{
+  width:2rem; height:2rem; background-color:rgba(15,35,55,.35); border-radius:50%; padding:.5rem; background-size:50%;
+}
+.carousel-indicators{ bottom:16px; }
+.carousel-indicators button{
+  width:26px; height:3px; border:0; border-radius:2px; margin:0 4px;
+  background-color:rgba(255,255,255,.45); opacity:1; transition:background-color .2s ease, width .2s ease;
+}
+.carousel-indicators button.active{ background-color:var(--rbh-gold-soft); width:34px; }
+.hero-edge{ height:4px; background:linear-gradient(90deg,var(--rbh-blue-deep),var(--rbh-gold-soft) 50%,var(--rbh-blue-deep)); }
 
-    .news-date {
-        color: #888;
-        font-size: 0.95rem;
-        padding: 5px 20px;
-    }
+/* ---------- Section heading ---------- */
+.rbh-section{ margin:3.25rem 0; }
+.rbh-heading{ display:flex; align-items:baseline; justify-content:space-between; gap:1.5rem; margin-bottom:1.6rem; flex-wrap:wrap; }
+.rbh-heading h2{ margin:0; font-weight:700; font-size:1.55rem; color:var(--rbh-text); letter-spacing:.1px; }
+.rbh-heading p{ margin:.3rem 0 0; color:var(--rbh-muted); font-size:.95rem; max-width:46ch; }
 
-    .news-title {
-        font-size: 1.05rem;
-        font-weight: 500;
-        padding: 5px 20px 20px 20px;
-        line-height: 1.5;
-    }
+/* ---------- Events ---------- */
+.event-card{
+  border:1px solid var(--rbh-line) !important; border-radius:10px !important;
+  overflow:hidden; background:var(--rbh-surface); height:100%; cursor:pointer;
+  transition:border-color .2s ease, transform .2s ease, background-color .2s ease;
+}
+.event-card:hover{ border-color:var(--rbh-blue) !important; transform:translateY(-3px); }
+.event-card .news-card-img-wrapper{ position:relative; }
+.event-card img{ width:100%; height:210px; object-fit:cover; display:block; }
+.event-card .news-date{
+  position:absolute; left:0; bottom:0; margin:.75rem;
+  background:var(--rbh-accent); color:#fff; font-size:.72rem; font-weight:600;
+  padding:.3rem .6rem; border-radius:5px; letter-spacing:.2px;
+}
+.event-card .news-title{
+  padding:.95rem 1.1rem 1.15rem; font-size:1rem; font-weight:600;
+  color:var(--rbh-text); line-height:1.45;
+}
 
-    /* 4. Custom Circular Controls */
-    .news-controls-container {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin-top: 30px;
-    }
+/* ---------- What's new / Links ---------- */
+.rbh-panel{ border:1px solid var(--rbh-line); border-radius:10px; background:var(--rbh-surface); height:100%; overflow:hidden; transition:background-color .2s ease; }
+.rbh-panel-hd{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.95rem 1.25rem; background:var(--rbh-accent); color:#fff; font-weight:700; font-size:.95rem;
+}
+.rbh-panel-hd i{ color:var(--rbh-gold-soft); }
+.notice-list{ list-style:none; margin:0; padding:.4rem 0; }
+.notice-list li{ display:flex; gap:.85rem; align-items:flex-start; padding:.85rem 1.25rem; border-bottom:1px solid var(--rbh-line); }
+.notice-list li:last-child{ border-bottom:0; }
+.notice-mark{ flex:0 0 6px; width:6px; height:6px; border-radius:50%; background:var(--rbh-gold); margin-top:.5rem; }
+.notice-list span:last-child{ color:var(--rbh-body); font-size:.93rem; line-height:1.55; }
+.quick-links{ padding:.7rem; }
+.quick-links a{
+  display:flex; align-items:center; gap:.7rem; text-decoration:none;
+  padding:.85rem .9rem; margin:.25rem; border-radius:7px; color:var(--rbh-text);
+  font-size:.93rem; font-weight:600; border:1px solid transparent; transition:background .15s ease, border-color .15s ease;
+}
+.quick-links a i{ color:var(--rbh-blue); }
+.quick-links a:hover{ background:var(--rbh-tint); border-color:var(--rbh-line); }
 
-    .news-control-btn {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        border: 2px solid #8B5E3C; 
-        background: transparent;
-        color: #8B5E3C;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        font-size: 1.5rem;
-    }
+/* ---------- Mission / about strip ---------- */
+.mission-strip{
+  border-top:1px solid var(--rbh-line); padding-top:2.25rem; margin-top:3.25rem;
+  display:flex; gap:2.5rem; flex-wrap:wrap; align-items:flex-start;
+}
+.mission-strip h2{ flex:0 0 260px; margin:0; font-size:1.35rem; font-weight:700; color:var(--rbh-text); }
+.mission-strip p{ flex:1 1 380px; margin:0; color:var(--rbh-muted); line-height:1.75; font-size:.98rem; }
 
-    .news-control-btn:hover {
-        background: #8B5E3C;
-        color: white;
-    }
+/* ---------- Footer ---------- */
+.rbh-footer{
+  border-top:1px solid var(--rbh-line); margin-top:3.25rem; padding:1.75rem 0 2.25rem;
+  background:var(--rbh-tint); transition:background-color .2s ease;
+}
+.rbh-footer-inner{
+  display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+}
+.rbh-footer p{ margin:0; font-size:.85rem; color:var(--rbh-muted); line-height:1.6; }
+.rbh-footer strong{ color:var(--rbh-text); }
+.rbh-footer-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-    /* Layout Constraints */
-    main.container {
-        max-width: 100% !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-
-    .content-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
+@media (max-width:767.98px){
+  .content-container{ padding:0 14px; }
+  .event-card img{ height:190px; }
+  .rbh-section{ margin:2.25rem 0; }
+  .rbh-footer-inner{ flex-direction:column; align-items:flex-start; text-align:left; }
+}
 </style>
 {% endblock %}
 
+
 {% block content %}
 <div class="full-screen-banner">
-    <div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="main-carousel-shell">
+    <div id="mainCarousel" class="carousel slide" data-bs-touch="true">
         <div class="carousel-indicators" id="mainCarouselIndicators">
             <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active"></button>
             <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1"></button>
@@ -143,6 +174,8 @@
             <span class="carousel-control-next-icon"></span>
         </button>
     </div>
+    </div>
+    <div class="hero-edge"></div>
 </div>
 
 <!-- <div class="content-container my-5">
@@ -230,23 +263,26 @@
         </div>
     </div>
 </div> -->
-<div class="content-container my-5">
 
-    <h4 class="fw-bold mb-4">{{ "Events & Highlights"|t:current_lang }}</h4>
+<div class="content-container rbh-section">
+    <div class="rbh-heading">
+        <div>
+            <h2>{{ "Events & Highlights"|t:current_lang }}</h2>
+        </div>
+    </div>
 
     <div class="row g-4">
     {% for event in events %}
     <div class="col-md-4">
 
-    <div class="card news-card event-card"
+    <div class="card event-card"
         data-images="{% for img in event.images %}{{ img }}{% if not forloop.last %},{% endif %}{% endfor %}">
 
         <div class="news-card-img-wrapper">
             <img src="{{ event.thumbnail }}" alt="{{ event.title }}">
-        </div>
-
-        <div class="news-date">
-            {{ event.date }}
+            <div class="news-date">
+                {{ event.date }}
+            </div>
         </div>
 
         <div class="news-title">
@@ -264,32 +300,37 @@
 
 </div>
 
-<div class="content-container mb-5">
-    <h4 class="fw-bold">{{ "WHAT'S NEW"|t:current_lang }}</h4> 
-    <div class="row g-4 mt-1">
+<div class="content-container rbh-section">
+    <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <ul class="mb-0">
-                        <li><span>{{ "Notice 1 / Circular 1"|t:current_lang }}</span></li>
-                        <li><span>{{ "Notice 2 / Circular 2"|t:current_lang }}</span></li>
-                        <li><span>{{ "Notice 3 / Circular 3"|t:current_lang }}</span></li> 
-                    </ul>
-                </div>
+            <div class="rbh-panel">
+                <div class="rbh-panel-hd"><span>{{ "WHAT'S NEW"|t:current_lang }}</span><i class="fas fa-bullhorn"></i></div>
+                <ul class="notice-list">
+                    <li><span class="notice-mark"></span><span>{{ "Notice 1 / Circular 1"|t:current_lang }}</span></li>
+                    <li><span class="notice-mark"></span><span>{{ "Notice 2 / Circular 2"|t:current_lang }}</span></li>
+                    <li><span class="notice-mark"></span><span>{{ "Notice 3 / Circular 3"|t:current_lang }}</span></li>
+                </ul>
             </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-primary text-white fw-bold">{{ "Quick Links"|t:current_lang }}</div>
-                <div class="card-body d-grid gap-2">
-                    <a class="btn btn-outline-primary btn-sm text-start" href="https://rajbhasha.gov.in/" target="_blank" rel="noopener noreferrer">{{ "About Us"|t:current_lang }}</a>
-                    <a class="btn btn-outline-primary btn-sm text-start" href="https://tg.nic.in/" target="_blank" rel="noopener noreferrer">{{ "Downloads"|t:current_lang }}</a> 
+            <div class="rbh-panel">
+                <div class="rbh-panel-hd"><span>{{ "Quick Links"|t:current_lang }}</span><i class="fas fa-link"></i></div>
+                <div class="quick-links">
+                    <a href="https://rajbhasha.gov.in/" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i>{{ "About Us"|t:current_lang }}</a>
+                    <a href="https://tg.nic.in/" target="_blank" rel="noopener noreferrer"><i class="fas fa-download"></i>{{ "Downloads"|t:current_lang }}</a>
                 </div>
             </div>
         </div>
-    </div>                
+    </div>
 </div>
+
+
+<footer class="rbh-footer">
+    <div class="content-container rbh-footer-inner">
+        <p> <strong>{{ "National Informatics Centre (NIC)"|t:current_lang }}</strong></p>
+    </div>
+</footer>
 
 <script>
 
@@ -305,13 +346,17 @@ let carousel = bootstrap.Carousel.getInstance(mainCarouselElement);
 
 if (!carousel) {
     carousel = new bootstrap.Carousel(mainCarouselElement, {
-        interval: 2000,
+        interval: 3000,
         ride: "carousel",
         pause: false,
         wrap: true,
         touch: true
     });
 }
+
+// Ensure autoplay is actually running (guards against any environment where
+// the instance above was created but cycling didn't start automatically).
+carousel.cycle();
 
 cards.forEach(card => {
 
