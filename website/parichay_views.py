@@ -1,13 +1,16 @@
-from django.shortcuts import redirect
-from django.http import HttpResponse
+import logging
+
 from django.contrib.auth import login
 from django.db import transaction
+from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.utils import timezone
 
+from .models import CustomUser, UserProfile
 from .services.parichay import ParichayService
 from .services.pkce import PKCEService
-from .models import CustomUser, UserProfile
 
+log = logging.getLogger("")
 
 def parichay_login(request):
     if request.user.is_authenticated:
@@ -22,6 +25,8 @@ def parichay_login(request):
         code_challenge=pkce_data["code_challenge"],
         state=request.session["oauth_state"],
     )
+    
+    log.info("Parichay Authorization URL: %s", authorization_url)
 
     return redirect(authorization_url)
 
@@ -65,6 +70,8 @@ def parichay_callback(request):
         )
 
         access_token = token_response.get("access_token")
+        refresh_token = token_response.get("refresh_token")
+        expires_in = token_response.get("expires_in")
 
         if not access_token:
             return HttpResponse(
@@ -221,6 +228,11 @@ def parichay_callback(request):
             # Save temporary login information
             # -------------------------------------------------
             request.session["parichay_id"] = parichay_id
+            request.session["parichay_access_token"] = access_token
+            request.session["parichay_refresh_token"] = refresh_token
+            request.session["parichay_token_expires_at"] = (
+                timezone.now().timestamp() + (7 * 24 * 60 * 60)
+            )
 
             request.session.pop("code_verifier", None)
             request.session.pop("oauth_state", None)

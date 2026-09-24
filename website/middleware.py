@@ -4,7 +4,6 @@ import hashlib
 import logging
 import secrets
 from bs4 import BeautifulSoup, Comment
-from deep_translator import GoogleTranslator
 from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
 from django.core.cache import cache
@@ -13,6 +12,7 @@ from django.http import Http404
 from django.core.cache import cache
 import hashlib
 from django.utils.cache import add_never_cache_headers
+from .services.parichay import ParichayService
 
 logger = logging.getLogger(__name__)
 
@@ -79,69 +79,77 @@ class DynamicTranslationMiddleware(MiddlewareMixin):
 
     def process_response(self, request, response):
         if request.method != "GET":
-             
-             return response
-        target_lang = request.GET.get('lang')
-        
-        if request.method == "GET" and target_lang and target_lang != 'en' and "text/html" in response.get('Content-Type', ''):
-            try:
-                content = response.content.decode('utf-8')
-                soup = BeautifulSoup(content, 'html.parser')
+            return response
 
-                # 1. Strip comments immediately
-                for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+        target_lang = request.GET.get("lang")
+
+        if (
+            request.method == "GET"
+            and target_lang
+            and target_lang != "en"
+            and "text/html" in response.get("Content-Type", "")
+        ):
+            try:
+                content = response.content.decode("utf-8")
+                soup = BeautifulSoup(content, "html.parser")
+
+                # Remove HTML comments
+                for comment in soup.find_all(
+                    string=lambda text: isinstance(text, Comment)
+                ):
                     comment.extract()
 
-                translator = GoogleTranslator(source='auto', target=target_lang)
+                # Only use local/manual translations.
+                manual_translations = self.MANUAL_MAP.get(target_lang, {})
 
-                # 2. Optimized Text Node Processing
                 for element in soup.find_all(string=True):
-                    # Skip code-heavy tags
-                    if element.parent.name in ['script', 'style', 'code', 'head', 'title', 'meta']:
+
+                    # Skip technical/code elements
+                    if element.parent.name in [
+                        "script",
+                        "style",
+                        "code",
+                        "head",
+                        "title",
+                        "meta",
+                    ]:
                         continue
 
                     original_text = element.strip()
-                    
-                    # Skip empty strings, purely numeric data, or Locked Fields
-                    if not original_text or original_text.isdigit() or original_text in self.LOCKED_FIELDS:
+
+                    # Skip empty and numeric content
+                    if not original_text or original_text.isdigit():
                         continue
 
-                    # FIX: Check Blacklist (Case-Insensitive)
-                    if original_text.upper() in [x.upper() for x in self.BLACKLIST]:
-                        # Do not replace with translated text; just leave it as is or clear if it's a ghost tag
+                    # Keep locked fields unchanged
+                    if original_text in self.LOCKED_FIELDS:
                         continue
 
-                    # 3. Manual Mapping
-                    if target_lang in self.MANUAL_MAP and original_text in self.MANUAL_MAP[target_lang]:
-                        element.replace_with(self.MANUAL_MAP[target_lang][original_text])
+                    # Keep blacklisted technical text unchanged
+                    if original_text.upper() in [
+                        item.upper() for item in self.BLACKLIST
+                    ]:
                         continue
 
-                    # 4. Dynamic Translation with Cache
-                    if len(original_text) > 1:
-                        cache_key = hashlib.sha256(f"{target_lang}_{original_text}".encode(), usedforsecurity=False).hexdigest()
-                        translated_text = cache.get(cache_key)
-                        
-                        if not translated_text:
-                            try:
-                                # Final safety check: Don't translate if it looks like a tag
-                                if '<' in original_text or '>' in original_text:
-                                    continue
-                                    
-                                translated_text = translator.translate(original_text)
-                                if translated_text:
-                                    cache.set(cache_key, translated_text, 86400)
-                            except:
-                                translated_text = original_text
-                        
-                        if translated_text:
-                            element.replace_with(translated_text)
-                
-                # Use 'html.parser' or 'lxml' to avoid extra <html> tags being added at the top
-                response.content = soup.encode('utf-8')
-            except Exception:
-                return response
+                    # Do not process HTML-looking text
+                    if "<" in original_text or ">" in original_text:
+                        continue
+
+                    # Use ONLY the local translation dictionary.
+                    translated_text = manual_translations.get(original_text)
+
+                    if translated_text:
+                        element.replace_with(translated_text)
+
+                response.content = soup.encode("utf-8")
+
+            except Exception as e:
+                logger.exception(
+                    "Offline translation middleware failed: %s",
+                    e
+                )
+
         return response
-
 
 class SecurityHeadersMiddleware(MiddlewareMixin):
     def process_request(self, request):
@@ -236,4 +244,43 @@ class NoCacheMiddleware(MiddlewareMixin):
     def process_response(self, request, response):
         if hasattr(request, 'user') and request.user.is_authenticated:
             add_never_cache_headers(response)
+        return response
+    
+class ParichayTokenRefreshMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            access_token = request.session.get("parichay_access_token")
+            refresh_token = request.session.get("parichay_refresh_token")
+            expires_at = request.session.get("parichay_token_expires_at")
+
+            if access_token and refresh_token:
+                try:
+                    (
+                        new_access_token,
+                        new_refresh_token,
+                        new_expires_at,
+                    ) = ParichayService.refresh_if_expired(
+                        access_token,
+                        refresh_token,
+                        expires_at,
+                    )
+
+                    if new_expires_at is not None:
+                        request.session["parichay_access_token"] = (
+                            new_access_token
+                        )
+                        request.session["parichay_refresh_token"] = (
+                            new_refresh_token
+                        )
+                        request.session["parichay_token_expires_at"] = (
+                            new_expires_at
+                        )
+
+                except Exception as e:
+                    print("PARICHAY TOKEN REFRESH FAILED:", e)
+
+        response = self.get_response(request)
         return response
