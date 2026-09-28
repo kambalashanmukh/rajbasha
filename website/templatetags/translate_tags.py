@@ -12,7 +12,7 @@ register = template.Library()
 HINDI_TRANSLATIONS = {
 
     # Navigation
-    "Home": "होम",
+    "Home": "मुखपृष्ठ",
     "FAQs": "अक्सर पूछे जाने वाले प्रश्न",
     "About Us": "हमारे बारे में",
     "Our IT Products": "हमारे आईटी उत्पाद",
@@ -61,7 +61,7 @@ HINDI_TRANSLATIONS = {
     "Cancel": "रद्द करें",
     "Edit": "संपादित करें",
     "Delete": "हटाएँ",
-    "Update": "अपडेट करें",
+    "Update": "अद्यतन",
     "View": "देखें",
     "Search": "खोजें",
     "Back": "वापस",
@@ -72,7 +72,7 @@ HINDI_TRANSLATIONS = {
     # Profile
     "Profile": "प्रोफ़ाइल",
     "Employee Profile": "कर्मचारी प्रोफ़ाइल",
-    "Update Profile": "प्रोफ़ाइल अपडेट करें",
+    "Update Profile": "अद्यतन अपडेट करें",
     "Personal Information": "व्यक्तिगत जानकारी",
 
     # QPR
@@ -104,7 +104,7 @@ HINDI_TRANSLATIONS = {
     "HOD Dashboard": "एचओडी डैशबोर्ड",
     "User Dashboard": "उपयोगकर्ता डैशबोर्ड",
     "Backup Dashboard": "बैकअप डैशबोर्ड",
-
+    "Dashboard":"डैशबोर्ड",
     "Account Created!": "खाता बनाया गया!",
     "Welcome. Your data is 100% encrypted and DPDP compliant.": "आपका स्वागत है। आपका डेटा 100% एन्क्रिप्टेड और डीपीडीपी के अनुरूप है।",
     "Get Started": "शुरू करें",
@@ -143,11 +143,11 @@ HINDI_TRANSLATIONS = {
     "USERNAME": "उपयोगकर्ता नाम",
     "ROLE": "भूमिका",
     "STATUS": "स्थिति",
-    "Archive": "संग्रहित करें",
-    "Archived Users Repository": "संग्रहीत उपयोगकर्ता भंडार",
+    "Archive": "अभिलेखित करें",
+    "Archived Users Repository": "अभिलेखित उपयोगकर्ता भंडार",
     "ORIGINAL USERNAME": "मूल उपयोगकर्ता नाम",
-    "ARCHIVED DATE": "संग्रहित करने की तिथि",
-    "No archived users found.": "कोई संग्रहीत उपयोगकर्ता नहीं मिला।",
+    "ARCHIVED DATE": "अभिलेखित की तिथि",
+    "No archived users found.": "कोई अभिलेखित उपयोगकर्ता नहीं मिला।",
 
     # HOD Dashboard
     "Management of employees and progress tracking": "कर्मचारियों का प्रबंधन और प्रगति की निगरानी",

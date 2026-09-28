@@ -170,7 +170,7 @@
         </div>
     </div>
 </nav>
-
+</div>
 <main class="container-fluid px-4 my-4 flex-grow-1">
 
 {% if messages %}
@@ -187,14 +187,44 @@
 {% endblock %}
 </main>
 
-<footer class="bg-dark text-light py-3 fixed-bottom">    
-    <div class="container text-center small">
-        {% if user_office%}  {{user_office}}
-                    {% if user_state %}| {{ user_state }}
-                        
-                    {% endif %}
-                       {% endif %}
+<footer class="rb-footer">
+
+    <div class="rb-footer-content">
+
+        <div class="rb-footer-brand">
+            <div class="rb-footer-title">
+                Rajbhasha Portal
+            </div>
+
+            <div class="rb-footer-accent"></div>
+        </div>
+
+        <div class="rb-footer-nic">
+            <strong>National Informatics Centre (NIC)</strong>
+
+            <span>
+                Ministry of Electronics &amp; Information Technology
+            </span>
+
+            <span>
+                Government of India
+            </span>
+        </div>
+
+        <div class="rb-footer-bottom">
+            <span>
+                © {% now "Y" %} Rajbhasha Portal
+            </span>
+
+            <span class="rb-footer-divider">•</span>
+
+            <span>
+                All Rights Reserved
+            </span>
+        </div>
+
     </div>
+
 </footer>
 <script src="{% static 'js/xlsx.full.min.js' %}"></script>
 <script src="{% static 'js/jspdf.umd.min.js' %}"></script>

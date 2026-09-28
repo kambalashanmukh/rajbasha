@@ -35,7 +35,7 @@
  {% endfor %}
 {% endif %}
 
-<div class="container-fluid px-4 mt-4">
+<div class="container-fluid px-4 mt-4 dashboard-page">
  
  <div class="d-flex justify-content-between align-items-center mb-4">
  <div>
@@ -476,87 +476,201 @@
  new bootstrap.Modal(document.getElementById('designationModal')).show();
  }
  </script>
+ 
  {% elif role|default:user.role == 'hod' %}
- <div class="row">
- <div class="col-md-3"><div class="stat-card text-center"><i class="fas fa-users stat-icon"></i><div class="stat-number">{{ total_users }}</div><div class="stat-label">{{ "Total Employees"|t:current_lang }}</div></div></div>
- <div class="col-md-3"><div class="stat-card text-center" style="border-left-color: #28a745;"><i class="fas fa-check-circle stat-icon text-success"></i><div class="stat-number text-success">{{ qpr_submitted }}</div><div class="stat-label">{{ "QPR Submitted"|t:current_lang }}</div></div></div>
- <div class="col-md-3"><div class="stat-card text-center" style="border-left-color: #ffc107;"><i class="fas fa-clock stat-icon text-warning"></i><div class="stat-number text-warning">{{ qpr_pending }}</div><div class="stat-label">{{ "QPR Pending"|t:current_lang }}</div></div></div>
- <div class="col-md-3"><div class="stat-card text-center" style="border-left-color: #17a2b8;"><i class="fas fa-user-check stat-icon text-info"></i><div class="stat-number text-info">{{ profile_updated }}</div><div class="stat-label">{{ "Profile Updated"|t:current_lang }}</div></div></div>
- </div>
 
- <div class="card shadow-sm border-0 mt-3">
- <div class="card-body">
- <h5 class="fw-bold text-primary mb-3">{{ "Quick Actions"|t:current_lang }}</h5>
- <a href="{% url 'qpr_hod_detail_list' %}" class="btn btn-primary me-2 mb-2"><i class="fas fa-table"></i> {{ "View Detail List"|t:current_lang }}</a>
- <a href="{% url 'change_password' %}" class="btn btn-warning me-2 mb-2"><i class="fas fa-lock"></i> {{ "Change Password"|t:current_lang }}</a>
- </div>
- </div>
- {% if profile_change_requests|length > 0 %}
- <div class="card shadow-sm border-0 mt-4">
- <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
- <h6 class="mb-0 fw-bold">
- <i class="fas fa-edit"></i> Pending Profile Change Requests
- </h6>
- <span class="badge bg-dark">{{ profile_change_requests|length }}</span>
- </div>
+<!-- HOD Statistics -->
+<div class="row g-4 hod-statistics">
 
- <div class="card-body table-responsive">
- <table class="table table-hover align-middle">
- <thead class="table-light">
- <tr>
- <th>Emp Code</th>
- <th>Name</th>
- <th>Fields</th>
- <th>Reason</th>
- <th>Requested On</th>
- <th>Actions</th>
- </tr>
- </thead>
- <tbody>
- {% for req in profile_change_requests %}
- <tr>
- <td><strong>{{ req.profile.employee_code }}</strong></td>
- <td>{{ req.profile.name }}</td>
- <td>
- {% if req.requested_field_labels %}
- <small>{{ req.requested_field_labels|join:", " }}</small>
- {% else %}
- <small>All fields</small>
- {% endif %}
- </td>
- <td style="max-width:250px;">{{ req.change_reason }}</td>
- <td>{{ req.requested_at|date:"d M Y, H:i" }}</td>
- <td>
- <div class="btn-group btn-group-sm">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <i class="fas fa-users stat-icon"></i>
+            <div class="stat-number">{{ total_users }}</div>
+            <div class="stat-label">
+                {{ "Total Employees"|t:current_lang }}
+            </div>
+        </div>
+    </div>
 
- <!-- APPROVE -->
- <form action="{% url 'approve_profile_change_hod' req.id %}" method="POST">
- {% csrf_token %}
- <button class="btn btn-success"
- onclick="return confirm('Approve this request?')">
- ✔
- </button>
- </form>
+    <div class="col-md-3">
+        <div class="stat-card text-center hod-stat-submitted">
+            <i class="fas fa-check-circle stat-icon"></i>
+            <div class="stat-number">{{ qpr_submitted }}</div>
+            <div class="stat-label">
+                {{ "QPR Submitted"|t:current_lang }}
+            </div>
+        </div>
+    </div>
 
- <!-- REJECT -->
- <form action="{% url 'reject_profile_change_hod' req.id %}" method="POST">
- {% csrf_token %}
- <button class="btn btn-danger"
- onclick="return confirm('Reject this request?')">
- ✖
- </button>
- </form>
+    <div class="col-md-3">
+        <div class="stat-card text-center hod-stat-pending">
+            <i class="fas fa-clock stat-icon"></i>
+            <div class="stat-number">{{ qpr_pending }}</div>
+            <div class="stat-label">
+                {{ "QPR Pending"|t:current_lang }}
+            </div>
+        </div>
+    </div>
 
- </div>
- </td>
- </tr>
- {% endfor %}
- </tbody>
- </table>
- </div>
- </div>
- {% endif %}
+    <div class="col-md-3">
+        <div class="stat-card text-center hod-stat-profile">
+            <i class="fas fa-user-check stat-icon"></i>
+            <div class="stat-number">{{ profile_updated }}</div>
+            <div class="stat-label">
+                {{ "Profile Updated"|t:current_lang }}
+            </div>
+        </div>
+    </div>
 
+</div>
+
+
+<!-- HOD Quick Actions -->
+<div class="card shadow-sm border-0 mt-3 hod-quick-actions">
+
+    <div class="card-body">
+
+        <h5 class="fw-bold mb-3">
+            {{ "Quick Actions"|t:current_lang }}
+        </h5>
+
+        <a href="{% url 'qpr_hod_detail_list' %}"
+           class="btn btn-primary me-2 mb-2">
+            <i class="fas fa-table"></i>
+            {{ "View Detail List"|t:current_lang }}
+        </a>
+
+        <a href="{% url 'change_password' %}"
+           class="btn btn-warning me-2 mb-2">
+            <i class="fas fa-lock"></i>
+            {{ "Change Password"|t:current_lang }}
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- Pending Profile Change Requests -->
+{% if profile_change_requests|length > 0 %}
+
+<div class="card shadow-sm border-0 mt-4 hod-profile-requests">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+
+        <h6 class="mb-0 fw-bold">
+            <i class="fas fa-edit"></i>
+            {{ "Pending Profile Change Requests"|t:current_lang }}
+        </h6>
+
+        <span class="badge">
+            {{ profile_change_requests|length }}
+        </span>
+
+    </div>
+
+    <div class="card-body table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead>
+                <tr>
+                    <th>{{ "Emp Code"|t:current_lang }}</th>
+                    <th>{{ "Name"|t:current_lang }}</th>
+                    <th>{{ "Fields"|t:current_lang }}</th>
+                    <th>{{ "Reason"|t:current_lang }}</th>
+                    <th>{{ "Requested On"|t:current_lang }}</th>
+                    <th>{{ "Actions"|t:current_lang }}</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for req in profile_change_requests %}
+
+                <tr>
+
+                    <td>
+                        <strong>{{ req.profile.employee_code }}</strong>
+                    </td>
+
+                    <td>
+                        {{ req.profile.name }}
+                    </td>
+
+                    <td>
+                        {% if req.requested_field_labels %}
+                            <small>
+                                {{ req.requested_field_labels|join:", " }}
+                            </small>
+                        {% else %}
+                            <small>
+                                {{ "All fields"|t:current_lang }}
+                            </small>
+                        {% endif %}
+                    </td>
+
+                    <td class="hod-request-reason">
+                        {{ req.change_reason }}
+                    </td>
+
+                    <td>
+                        {{ req.requested_at|date:"d M Y, H:i" }}
+                    </td>
+
+                    <td>
+
+                        <div class="btn-group btn-group-sm">
+
+                            <!-- APPROVE -->
+                            <form
+                                action="{% url 'approve_profile_change_hod' req.id %}"
+                                method="POST">
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-success"
+                                    onclick="return confirm('Approve this request?')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+
+                            </form>
+
+                            <!-- REJECT -->
+                            <form
+                                action="{% url 'reject_profile_change_hod' req.id %}"
+                                method="POST">
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-danger"
+                                    onclick="return confirm('Reject this request?')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endif %}
  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
  <div class="menu-items" id="menuItems">
  <a href="{% url 'qpr_hod_dashboard' %}" class="menu-item"><i class="fas fa-chart-pie"></i> {{ "Dashboard"|t:current_lang }}</a>
@@ -770,10 +884,10 @@
     </div>
 
  </div>
-</div>
+
 
  <!-- Role-Based QPR: show manager/admin QPR options in addition to existing QPR card -->
- <div class="row mt-3">
+ <div class="row mt-3 user-role-qpr">
  <div class="col-md-12">
  <div class="card h-100 border-secondary shadow-sm">
  <div class="card-body text-center">
