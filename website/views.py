@@ -1703,6 +1703,15 @@ def faqs(request):
     lang = request.session.get('lang', 'en')
     return render(request, "faqs.html", {"current_lang": lang})
 
+@login_required
+def rajbhasha_activities(request):
+    lang = request.session.get("lang", "en")
+    return render(
+        request,
+        "rajbhasha_activities.html",
+        {"current_lang": lang}
+    )   
+
 def event_detail(request, folder):
     events = get_all_events()
     selected_event = next((e for e in events if e["folder"] == folder), None)
