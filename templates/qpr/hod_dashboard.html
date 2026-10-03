@@ -6,78 +6,821 @@
 
 {% block extra_css %}
 <style>
+    /* =====================================================
+       HOD DASHBOARD — MAIN LAYOUT
+       ===================================================== */
+
     .dashboard-container {
-        margin-top: 30px;
-    }
-    .stat-card {
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        border-left: 5px solid #2c5a86;
-        text-align: center;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    .stat-number {
-        font-size: 36px;
-        font-weight: bold;
-        color: #2c5a86;
-        margin: 10px 0;
-    }
-    .stat-label {
-        color: #666;
-        font-size: 14px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .stat-icon {
-        font-size: 32px;
-        color: #2c5a86;
-        margin-bottom: 10px;
+        margin-top: 24px;
+        margin-bottom: 40px;
     }
 
+
+    /* =====================================================
+       HOD HEADER
+       Matches the User Dashboard visual style
+       ===================================================== */
+
     .header-section {
-        padding: 20px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        margin-bottom: 30px;
+        position: relative;
+
+        padding: 24px 28px;
+
+        background: linear-gradient(
+            135deg,
+            var(--rb-primary-dark) 0%,
+            var(--rb-primary) 55%,
+            var(--rb-secondary) 100%
+        ) !important;
+
+        color: #ffffff !important;
+
+        border: none !important;
+        border-radius: 16px;
+
+        box-shadow: var(--rb-shadow);
+
+        margin-bottom: 24px;
+
+        overflow: hidden;
     }
+
+    /* Subtle decorative shape */
+    .header-section::after {
+        content: "";
+
+        position: absolute;
+
+        width: 180px;
+        height: 180px;
+
+        right: -70px;
+        top: -90px;
+
+        border-radius: 50%;
+
+        background: rgba(255, 255, 255, 0.08);
+
+        pointer-events: none;
+    }
+
+    .header-section h3 {
+        position: relative;
+        z-index: 1;
+
+        margin-bottom: 6px;
+
+        color: #ffffff !important;
+
+        font-size: 1.55rem;
+        font-weight: 700;
+    }
+
+    .header-section p {
+        position: relative;
+        z-index: 1;
+
+        color: rgba(255, 255, 255, 0.82) !important;
+
+        font-size: 0.9rem;
+    }
+
+    .header-section .text-end {
+        position: relative;
+        z-index: 1;
+    }
+
+    .header-section .text-end small {
+        color: rgba(255, 255, 255, 0.78) !important;
+    }
+
+    .header-section .text-end h5 {
+        margin: 3px 0 0 !important;
+
+        color: #ffffff !important;
+
+        font-weight: 700;
+    }
+
+
+    /* =====================================================
+       HOD STATISTICS
+       ===================================================== */
+
+    .stat-card {
+        position: relative;
+
+        min-height: 150px;
+
+        padding: 22px 18px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        background: var(--rb-surface) !important;
+
+        color: var(--rb-text);
+
+        border: 1px solid var(--rb-border);
+
+        border-top: 4px solid var(--rb-primary);
+
+        border-radius: 14px;
+
+        box-shadow: var(--rb-shadow-sm);
+
+        text-align: center;
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+
+        box-shadow: var(--rb-shadow);
+    }
+
+
+    /* Icons */
+
+    .stat-icon {
+        display: block;
+
+        margin-bottom: 10px;
+
+        font-size: 1.2rem;
+
+        color: var(--rb-primary);
+    }
+
+
+    /* Numbers */
+
+    .stat-number {
+        margin: 4px 0 6px;
+
+        color: var(--rb-text) !important;
+
+        font-size: 2rem;
+
+        line-height: 1;
+
+        font-weight: 700;
+    }
+
+
+    /* Labels */
+
+    .stat-label {
+        color: var(--rb-text-muted) !important;
+
+        font-size: 0.76rem;
+
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.04em;
+    }
+
+
+    /* -----------------------------------------------------
+       Individual statistic colors
+       ----------------------------------------------------- */
+
+    /* Total Employees — Purple */
+
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(1)
+    .stat-card {
+        border-top-color: var(--rb-primary);
+    }
+
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(1)
+    .stat-icon {
+        color: var(--rb-primary);
+    }
+
+
+    /* QPR Submitted — Green */
+
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(2)
+    .stat-card {
+        border-top-color: var(--rb-success);
+    }
+
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(2)
+    .stat-icon,
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(2)
+    .stat-number {
+        color: var(--rb-success) !important;
+    }
+
+
+    /* QPR Pending — Amber */
+
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(3)
+    .stat-card {
+        border-top-color: var(--rb-warning);
+    }
+
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(3)
+    .stat-icon,
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(3)
+    .stat-number {
+        color: var(--rb-warning) !important;
+    }
+
+
+    /* Profile Updated — Teal */
+
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(4)
+    .stat-card {
+        border-top-color: var(--rb-secondary);
+    }
+
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(4)
+    .stat-icon,
+    .dashboard-container
+    .row:not(.mt-4)
+    .col-md-3:nth-child(4)
+    .stat-number {
+        color: var(--rb-secondary) !important;
+    }
+
+
+    /* =====================================================
+       QUICK ACTIONS
+       ===================================================== */
+
+    .quick-actions-card {
+        border-top: 4px solid var(--rb-primary) !important;
+
+        border-radius: 16px !important;
+
+        background: var(--rb-surface) !important;
+
+        color: var(--rb-text);
+
+        box-shadow: var(--rb-shadow-sm);
+
+        padding: 22px 24px;
+
+        margin-bottom: 0;
+    }
+
+    .quick-actions-card h5 {
+        margin-bottom: 16px;
+
+        color: var(--rb-primary) !important;
+
+        font-size: 1rem;
+
+        font-weight: 700;
+
+        text-align: left !important;
+    }
+
     .quick-actions {
         display: flex;
+
         flex-wrap: wrap;
+
         gap: 10px;
     }
+
     .btn-custom {
-        padding: 10px 20px;
-        border-radius: 6px;
-        transition: all 0.2s;
+        padding: 9px 17px;
+
+        border-radius: 9px;
+
+        font-size: 0.86rem;
+
+        font-weight: 600;
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
     }
+
     .btn-custom:hover {
         transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+        box-shadow: var(--rb-shadow-sm);
     }
+
+
+    /* =====================================================
+       EXISTING PENDING APPROVALS
+       Keep functionality, improve visual consistency
+       ===================================================== */
+
+    .dashboard-container .border-warning {
+        border: 1px solid var(--rb-border) !important;
+
+        border-top: 4px solid var(--rb-accent) !important;
+
+        border-radius: 16px !important;
+
+        overflow: hidden;
+
+        box-shadow: var(--rb-shadow-sm) !important;
+
+        background: var(--rb-surface);
+    }
+
+    .dashboard-container .border-warning .card-header {
+        background: var(--rb-surface) !important;
+
+        color: var(--rb-text) !important;
+
+        border-bottom: 1px solid var(--rb-border) !important;
+    }
+
+    /* =====================================================
+   HOD DASHBOARD — PENDING USER APPROVALS
+   ===================================================== */
+
+        .hod-pending-approvals {
+            background: var(--rb-surface);
+
+            border: 1px solid var(--rb-border);
+            border-top: 4px solid var(--rb-accent);
+
+            border-radius: 16px;
+
+            box-shadow: var(--rb-shadow-sm);
+
+            overflow: hidden;
+        }
+
+
+        /* Header */
+
+        .hod-pending-header {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 18px 22px;
+
+            background: var(--rb-surface);
+
+            border-bottom: 1px solid var(--rb-border);
+        }
+
+        .hod-pending-header h5 {
+            margin: 0;
+
+            color: var(--rb-text);
+
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .hod-pending-header h5 i {
+            margin-right: 8px;
+
+            color: var(--rb-accent);
+        }
+
+        .hod-pending-header p {
+            margin: 5px 0 0;
+
+            color: var(--rb-text-muted);
+
+            font-size: 0.78rem;
+        }
+
+
+        /* Count */
+
+        .hod-pending-count {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            min-width: 32px;
+            height: 32px;
+
+            padding: 0 9px;
+
+            background: var(--rb-accent);
+
+            color: #ffffff;
+
+            border-radius: 20px;
+
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+
+        /* Table */
+
+        .hod-pending-body {
+            padding: 0;
+        }
+
+        .hod-pending-body .table {
+            color: var(--rb-text);
+        }
+
+        .hod-pending-body .table thead th {
+            padding: 13px 16px;
+
+            background: var(--rb-background);
+
+            color: var(--rb-text-muted);
+
+            border-bottom: 1px solid var(--rb-border);
+
+            font-size: 0.75rem;
+            font-weight: 700;
+
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+
+            white-space: nowrap;
+        }
+
+        .hod-pending-body .table tbody td {
+            padding: 15px 16px;
+
+            color: var(--rb-text);
+
+            border-bottom: 1px solid var(--rb-border);
+
+            font-size: 0.86rem;
+        }
+
+        .hod-pending-body .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .hod-pending-body .table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        .hod-pending-body .table tbody tr:hover {
+            background: var(--rb-primary-light);
+        }
+
+
+        /* Icons inside table */
+
+        .hod-pending-body td i {
+            color: var(--rb-text-muted);
+
+            width: 17px;
+
+            text-align: center;
+        }
+
+
+        /* Approval buttons */
+
+        .hod-approval-actions {
+            display: flex;
+
+            gap: 7px;
+
+            white-space: nowrap;
+        }
+
+        .hod-approval-actions form {
+            margin: 0;
+        }
+
+        .hod-approval-actions .btn {
+            border-radius: 8px;
+
+            font-size: 0.76rem;
+            font-weight: 600;
+
+            padding: 7px 11px;
+        }
+
+
+        /* Dark mode */
+
+        [data-bs-theme="dark"] .hod-pending-approvals {
+            background: var(--rb-surface);
+
+            border-color: var(--rb-border);
+        }
+
+        [data-bs-theme="dark"] .hod-pending-header,
+        [data-bs-theme="dark"] .hod-pending-body .table thead th {
+            background: var(--rb-surface);
+        }
+
+        [data-bs-theme="dark"] .hod-pending-body .table tbody tr:hover {
+            background: var(--rb-primary-light);
+        }
+    
+    
+    /* =====================================================
+    HOD DASHBOARD — EMPLOYEE LIST
+    ===================================================== */
+
+    .hod-employee-list {
+        background: var(--rb-surface);
+
+        border: 1px solid var(--rb-border);
+        border-top: 4px solid var(--rb-primary);
+
+        border-radius: 16px;
+
+        box-shadow: var(--rb-shadow-sm);
+
+        overflow: hidden;
+    }
+
+
+    /* Header */
+
+    .hod-employee-header {
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        padding: 18px 22px;
+
+        background: var(--rb-surface);
+
+        border-bottom: 1px solid var(--rb-border);
+    }
+
+    .hod-employee-header h5 {
+        margin: 0;
+
+        color: var(--rb-text);
+
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .hod-employee-header h5 i {
+        margin-right: 8px;
+
+        color: var(--rb-primary);
+    }
+
+    .hod-employee-header p {
+        margin: 5px 0 0;
+
+        color: var(--rb-text-muted);
+
+        font-size: 0.78rem;
+    }
+
+
+    /* Employee count */
+
+    .hod-employee-count {
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-width: 32px;
+        height: 32px;
+
+        padding: 0 9px;
+
+        background: var(--rb-primary);
+
+        color: #ffffff;
+
+        border-radius: 20px;
+
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+
+    /* Table */
+
+    .hod-employee-body .table {
+        color: var(--rb-text);
+    }
+
+    .hod-employee-body .table thead th {
+        padding: 13px 16px;
+
+        background: var(--rb-background);
+
+        color: var(--rb-text-muted);
+
+        border-bottom: 1px solid var(--rb-border);
+
+        font-size: 0.75rem;
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.03em;
+    }
+
+    .hod-employee-body .table tbody td {
+        padding: 15px 16px;
+
+        color: var(--rb-text);
+
+        border-bottom: 1px solid var(--rb-border);
+
+        font-size: 0.86rem;
+    }
+
+    .hod-employee-body .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .hod-employee-body .table tbody tr {
+        transition: background 0.15s ease;
+    }
+
+    .hod-employee-body .table tbody tr:hover {
+        background: var(--rb-primary-light);
+    }
+
+
+    /* Employee name */
+
+    .hod-employee-name {
+        font-weight: 600;
+        color: var(--rb-text);
+    }
+
+
+    /* HOD role badge */
+
+    .hod-role-badge {
+        display: inline-block;
+
+        margin-left: 7px;
+
+        padding: 4px 8px;
+
+        background: var(--rb-secondary-light);
+
+        color: var(--rb-secondary);
+
+        border-radius: 20px;
+
+        font-size: 0.68rem;
+
+        font-weight: 700;
+    }
+
+
+    /* Status badges */
+
+    .hod-status-badge {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 5px;
+
+        padding: 5px 9px;
+
+        border-radius: 20px;
+
+        font-size: 0.7rem;
+
+        font-weight: 700;
+
+        white-space: nowrap;
+    }
+
+    .hod-status-badge i {
+        font-size: 0.65rem;
+    }
+
+
+    /* Completed / Submitted */
+
+    .hod-status-success {
+        background: var(--rb-secondary-light);
+
+        color: var(--rb-success);
+    }
+
+
+    /* Pending */
+
+    .hod-status-warning {
+        background: var(--rb-accent-light);
+
+        color: var(--rb-warning);
+    }
+
+
+    /* Draft */
+
+    .hod-status-neutral {
+        background: var(--rb-primary-light);
+
+        color: var(--rb-text-muted);
+    }
+
+
+    /* Dark mode */
+
+    [data-bs-theme="dark"] .hod-employee-list {
+        background: var(--rb-surface);
+
+        border-color: var(--rb-border);
+    }
+
+    [data-bs-theme="dark"] .hod-employee-header,
+    [data-bs-theme="dark"] .hod-employee-body .table thead th {
+        background: var(--rb-surface);
+    }
+
+    [data-bs-theme="dark"] .hod-employee-body .table tbody tr:hover {
+        background: var(--rb-primary-light);
+    }
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
     @media (max-width: 768px) {
-        .menu-toggle {
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
+
+        .dashboard-container {
+            margin-top: 16px;
+
+            padding-left: 12px;
+            padding-right: 12px;
         }
+
+        .header-section {
+            padding: 20px;
+        }
+
+        .header-section .text-end {
+            margin-top: 14px;
+        }
+
         .stat-number {
-            font-size: 28px;
+            font-size: 1.7rem;
         }
+
         .quick-actions {
             flex-direction: column;
         }
+
         .btn-custom {
             width: 100%;
-            text-align: center;
         }
     }
+
+
+    /* =====================================================
+       DARK MODE
+       ===================================================== */
+
+    [data-bs-theme="dark"] .stat-card,
+    [data-bs-theme="dark"] .quick-actions-card,
+    [data-bs-theme="dark"] .dashboard-container .border-warning {
+        background: var(--rb-surface) !important;
+
+        border-color: var(--rb-border) !important;
+    }
+
+    [data-bs-theme="dark"] .header-section {
+        color: #ffffff !important;
+    }
+
 </style>
 {% endblock %}
 
@@ -111,9 +854,9 @@
         <div class="col-md-3 col-sm-6">
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                    <i class="fas fa-check-circle"></i>
                 </div>
-                <div class="stat-number" style="color: #28a745;">{{ qpr_submitted }}</div>
+                <div class="stat-number">{{ qpr_submitted }}</div>
                 <div class="stat-label">{{ "QPR Submitted"|t:current_lang }}</div>
             </div>
         </div>
@@ -121,9 +864,9 @@
         <div class="col-md-3 col-sm-6">
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-clock" style="color: #ffc107;"></i>
+                    <i class="fas fa-clock"></i>
                 </div>
-                <div class="stat-number" style="color: #ffc107;">{{ qpr_pending }}</div>
+                <div class="stat-number">{{ qpr_pending }}</div>
                 <div class="stat-label">{{ "QPR Pending"|t:current_lang }}</div>
             </div>
         </div>
@@ -131,9 +874,9 @@
         <div class="col-md-3 col-sm-6">
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-user-check" style="color: #17a2b8;"></i>
+                    <i class="fas fa-user-check"></i>
                 </div>
-                <div class="stat-number" style="color: #17a2b8;">{{ profile_updated }}</div>
+                <div class="stat-number">{{ profile_updated }}</div>
                 <div class="stat-label">{{ "Profile Updated"|t:current_lang }}</div>
             </div>
         </div>
@@ -142,8 +885,8 @@
     <!-- Quick Actions -->
     <div class="row mt-4">
         <div class="col-md-12">
-            <div class="stat-card" style="border-left: 5px solid #2c5a86;">
-                <h5 style="color: #2c5a86; margin-bottom: 15px; text-align: left;">{{ "Quick Actions"|t:current_lang }}</h5>
+            <div class="quick-actions-card">
+                <h5>{{ "Quick Actions"|t:current_lang }}</h5>
                 <div class="quick-actions">
                     <a href="{% url 'qpr_hod_detail_list' %}" class="btn btn-primary btn-custom">
                         <i class="fas fa-table"></i> {{ "View Detail List"|t:current_lang }}
@@ -162,127 +905,366 @@
         </div>
     </div>
 {% if pending_approvals %}
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card shadow mb-4 border-warning">
-                <div class="card-header py-3 bg-warning text-dark d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold"><i class="fas fa-user-clock me-2"></i> {{ "Pending User Approvals"|t:current_lang }}</h6>
-                    <span class="badge bg-dark text-white rounded-pill">{{ pending_approvals.count }}</span>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+
+        <div class="hod-pending-approvals">
+
+            <!-- Header -->
+            <div class="hod-pending-header">
+
+                <div>
+                    <h5>
+                        <i class="fas fa-user-clock"></i>
+                        {{ "Pending User Approvals"|t:current_lang }}
+                    </h5>
+
+                    <p>
+                        {{ "Users awaiting approval"|t:current_lang }}
+                    </p>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-bordered align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>{{ "Emp Code"|t:current_lang }}</th>
-                                    <th>{{ "Employee Details"|t:current_lang }}</th>
-                                    <th>{{ "Contact Info"|t:current_lang }}</th>
-                                    <th>{{ "Location Details"|t:current_lang }}</th>
-                                    <th>{{ "Actions"|t:current_lang }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for p in pending_approvals %}
-                                <tr>
-                                    <td class="fw-bold">{{ p.employee_code }}</td>
-                                    <td>
-                                        <div class="fw-bold">
-                                            {% if p.name %}
-                                                {{ p.name }}
-                                            {% elif p.employee.ename %}
-                                                {{ p.employee.ename }}
-                                            {% else %}
-                                                {{ p.user.username }}
-                                            {% endif %}
-                                        </div>
-                                        <small class="text-muted">
-                                            {{ p.employee.designation|default:"Designation Not Set" }}
-                                        </small>
-                                    </td>
-                                    <td>
-                                        <div><i class="fas fa-envelope text-muted me-1"></i> {{ p.email|default:p.user.email }}</div>
-                                        <div><i class="fas fa-phone text-muted me-1"></i> <small>{{ p.phone|default:"No Phone" }}</small></div>
-                                    </td>
-                                    <td>
-                                        <div><i class="fas fa-building text-muted me-1"></i> {{ p.office_name|default:"Office Not Set" }}</div>
-                                        <div><i class="fas fa-map-marker-alt text-muted me-1"></i> <small>{{ p.language_region|default:"Region Not Set" }}</small></div>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <form method="post" action="{% url 'process_user_approval' p.id 'approve' %}" class="d-inline" onsubmit="return confirm('{{ "Approve this user?"|t:current_lang }}');">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-success">
-                                                    <i class="fas fa-check"></i> {{ "Approve"|t:current_lang }}
-                                                </button>
-                                            </form>
-                                            <form method="post" action="{% url 'process_user_approval' p.id 'reject' %}" class="d-inline" onsubmit="return confirm('{{ "Reject this user?"|t:current_lang }}');">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger">
-                                                    <i class="fas fa-times"></i> {{ "Reject"|t:current_lang }}
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+
+                <span class="hod-pending-count">
+                    {{ pending_approvals.count }}
+                </span>
+
             </div>
-        </div>
-    </div>
-{% endif %}
-    <!-- Employee List -->
-    {% if user_list %}
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white fw-bold">
-                    <i class="fas fa-list"></i> {{ "Employees Under"|t:current_lang }} {{ hod_name|upper }}
-                </div>
-                <div class="card-body table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
+
+
+            <!-- Table -->
+            <div class="hod-pending-body">
+
+                <div class="table-responsive">
+
+                    <table class="table align-middle mb-0">
+
+                        <thead>
                             <tr>
-                                <th>{{ "Name"|t:current_lang }}</th>
-                                <th>{{ "Employee Code"|t:current_lang }}</th>
-                                <th>{{ "Profile Status"|t:current_lang }}</th>
-                                <th>{{ "QPR Status"|t:current_lang }}</th>
+
+                                <th>
+                                    {{ "Emp Code"|t:current_lang }}
+                                </th>
+
+                                <th>
+                                    {{ "Employee Details"|t:current_lang }}
+                                </th>
+
+                                <th>
+                                    {{ "Contact Info"|t:current_lang }}
+                                </th>
+
+                                <th>
+                                    {{ "Location Details"|t:current_lang }}
+                                </th>
+
+                                <th>
+                                    {{ "Actions"|t:current_lang }}
+                                </th>
+
                             </tr>
                         </thead>
+
                         <tbody>
-                            {% for user in user_list %}
+
+                            {% for p in pending_approvals %}
+
                             <tr>
+
+                                <!-- Employee Code -->
                                 <td class="fw-bold">
-                                    {{ user.name }}
-                                    {% if user.is_hod %}<span class="badge bg-success ms-2">{{ "HOD"|t:current_lang }}</span>{% endif %}
+                                    {{ p.employee_code }}
                                 </td>
-                                <td>{{ user.employee_code }}</td>
+
+
+                                <!-- Employee Details -->
                                 <td>
-                                    {% if user.profile_updated %}
-                                        <span class="badge bg-success">{{ "Completed"|t:current_lang }}</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark">{{ "Pending"|t:current_lang }}</span>
-                                    {% endif %}
+
+                                    <div class="fw-bold">
+                                        {% if p.name %}
+                                            {{ p.name }}
+                                        {% elif p.employee.ename %}
+                                            {{ p.employee.ename }}
+                                        {% else %}
+                                            {{ p.user.username }}
+                                        {% endif %}
+                                    </div>
+
+                                    <small class="text-muted">
+                                        {{ p.employee.designation|default:"Designation Not Set" }}
+                                    </small>
+
                                 </td>
+
+
+                                <!-- Contact Info -->
                                 <td>
-                                    {% if user.qpr_status == 'Submitted' %}
-                                        <span class="badge bg-success">{{ "Submitted"|t:current_lang }}</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">{{ "Draft"|t:current_lang }}</span>
-                                    {% endif %}
+
+                                    <div>
+                                        <i class="fas fa-envelope me-1"></i>
+                                        {{ p.email|default:p.user.email }}
+                                    </div>
+
+                                    <div>
+                                        <i class="fas fa-phone me-1"></i>
+                                        <small>
+                                            {{ p.phone|default:"No Phone" }}
+                                        </small>
+                                    </div>
+
                                 </td>
+
+
+                                <!-- Location Details -->
+                                <td>
+
+                                    <div>
+                                        <i class="fas fa-building me-1"></i>
+                                        {{ p.office_name|default:"Office Not Set" }}
+                                    </div>
+
+                                    <div>
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        <small>
+                                            {{ p.language_region|default:"Region Not Set" }}
+                                        </small>
+                                    </div>
+
+                                </td>
+
+
+                                <!-- Actions -->
+                                <td>
+
+                                    <div class="hod-approval-actions">
+
+                                        <!-- Approve -->
+                                        <form
+                                            method="post"
+                                            action="{% url 'process_user_approval' p.id 'approve' %}"
+                                            onsubmit="return confirm('{{ "Approve this user?"|t:current_lang }}');">
+
+                                            {% csrf_token %}
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-success btn-sm">
+
+                                                <i class="fas fa-check"></i>
+                                                {{ "Approve"|t:current_lang }}
+
+                                            </button>
+
+                                        </form>
+
+
+                                        <!-- Reject -->
+                                        <form
+                                            method="post"
+                                            action="{% url 'process_user_approval' p.id 'reject' %}"
+                                            onsubmit="return confirm('{{ "Reject this user?"|t:current_lang }}');">
+
+                                            {% csrf_token %}
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-danger btn-sm">
+
+                                                <i class="fas fa-times"></i>
+                                                {{ "Reject"|t:current_lang }}
+
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                </td>
+
                             </tr>
+
                             {% endfor %}
+
                         </tbody>
+
                     </table>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
-    {% endif %}
 </div>
 
+{% endif %}
+
+ <!-- Employee List -->
+
+{% if user_list %}
+
+<div class="row mt-4">
+
+    <div class="col-md-12">
+
+        <div class="hod-employee-list">
+
+            <!-- Header -->
+            <div class="hod-employee-header">
+
+                <div>
+                    <h5>
+                        <i class="fas fa-list"></i>
+                        {{ "Employees Under"|t:current_lang }}
+                        {{ hod_name|upper }}
+                    </h5>
+
+                    <p>
+                        {{ "Employee profile and QPR status"|t:current_lang }}
+                    </p>
+                </div>
+
+                <span class="hod-employee-count">
+                    {{ user_list|length }}
+                </span>
+
+            </div>
+
+
+            <!-- Employee Table -->
+            <div class="hod-employee-body">
+
+                <div class="table-responsive">
+
+                    <table class="table align-middle mb-0">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    {{ "Name"|t:current_lang }}
+                                </th>
+
+                                <th>
+                                    {{ "Employee Code"|t:current_lang }}
+                                </th>
+
+                                <th>
+                                    {{ "Profile Status"|t:current_lang }}
+                                </th>
+
+                                <th>
+                                    {{ "QPR Status"|t:current_lang }}
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for user in user_list %}
+
+                            <tr>
+
+                                <!-- Name -->
+
+                                <td>
+
+                                    <div class="hod-employee-name">
+
+                                        {{ user.name }}
+
+                                        {% if user.is_hod %}
+
+                                            <span class="hod-role-badge">
+                                                {{ "HOD"|t:current_lang }}
+                                            </span>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- Employee Code -->
+
+                                <td>
+                                    <strong>
+                                        {{ user.employee_code }}
+                                    </strong>
+                                </td>
+
+
+                                <!-- Profile Status -->
+
+                                <td>
+
+                                    {% if user.profile_updated %}
+
+                                        <span class="hod-status-badge hod-status-success">
+                                            <i class="fas fa-check-circle"></i>
+                                            {{ "Completed"|t:current_lang }}
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="hod-status-badge hod-status-warning">
+                                            <i class="fas fa-clock"></i>
+                                            {{ "Pending"|t:current_lang }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- QPR Status -->
+
+                                <td>
+
+                                    {% if user.qpr_status == 'Submitted' %}
+
+                                        <span class="hod-status-badge hod-status-success">
+                                            <i class="fas fa-check-circle"></i>
+                                            {{ "Submitted"|t:current_lang }}
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="hod-status-badge hod-status-neutral">
+                                            <i class="fas fa-file-alt"></i>
+                                            {{ "Draft"|t:current_lang }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+</div>
 
 {% endblock %}

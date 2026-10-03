@@ -326,97 +326,445 @@ main.container{ max-width:100% !important; padding-left:0 !important; padding-ri
 </div>
 
 
-<footer class="rbh-footer">
-    <div class="content-container rbh-footer-inner">
-        <p> <strong>{{ "National Informatics Centre (NIC)"|t:current_lang }}</strong></p>
+<!-- =========================================================
+     EVENT GALLERY MODAL
+     ========================================================= -->
+
+<div class="modal fade" id="eventGalleryModal" tabindex="-1"
+     aria-labelledby="eventGalleryTitle" aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+
+        <div class="modal-content event-gallery-modal">
+
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="eventGalleryTitle">
+                        Event Gallery
+                    </h5>
+                    <div class="event-gallery-subtitle">
+                        Rajbhasha
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div id="eventGalleryCarousel"
+                     class="carousel slide"
+                     data-bs-touch="true">
+
+                    <div class="carousel-indicators"
+                         id="eventGalleryIndicators">
+                    </div>
+
+                    <div class="carousel-inner"
+                         id="eventGalleryInner">
+                    </div>
+
+                <button class="carousel-control-prev"
+                        type="button"
+                        aria-label="Previous image">
+
+                    <span class="carousel-control-prev-icon"></span>
+
+                </button>
+
+
+                <button class="carousel-control-next"
+                        type="button"
+                        aria-label="Next image">
+
+                    <span class="carousel-control-next-icon"></span>
+
+                </button>
+
+                </div>
+
+            </div>
+
+        </div>
     </div>
-</footer>
+</div>
 
 <script>
-
 document.addEventListener("DOMContentLoaded", function () {
 
-const cards = document.querySelectorAll(".event-card");
+    /* =====================================================
+       MAIN HERO CAROUSEL
+       ===================================================== */
 
-const carouselInner = document.getElementById("mainCarouselInner");
-const carouselIndicators = document.getElementById("mainCarouselIndicators");
-const mainCarouselElement = document.getElementById("mainCarousel");
+    const mainCarouselElement =
+        document.getElementById("mainCarousel");
 
-let carousel = bootstrap.Carousel.getInstance(mainCarouselElement);
+    if (mainCarouselElement) {
 
-if (!carousel) {
-    carousel = new bootstrap.Carousel(mainCarouselElement, {
-        interval: 3000,
-        ride: "carousel",
-        pause: false,
-        wrap: true,
-        touch: true
+        new bootstrap.Carousel(
+            mainCarouselElement,
+            {
+                interval: 3000,
+                ride: "carousel",
+                pause: false,
+                wrap: true,
+                touch: true
+            }
+        );
+    }
+
+
+    /* =====================================================
+       EVENT GALLERY
+       ===================================================== */
+
+    const eventCards =
+        document.querySelectorAll(".event-card");
+
+    const modalElement =
+        document.getElementById("eventGalleryModal");
+
+    const galleryElement =
+        document.getElementById("eventGalleryCarousel");
+
+    const galleryInner =
+        document.getElementById("eventGalleryInner");
+
+    const galleryIndicators =
+        document.getElementById("eventGalleryIndicators");
+
+    const galleryTitle =
+        document.getElementById("eventGalleryTitle");
+
+    const nextButton =
+        galleryElement.querySelector(".carousel-control-next");
+
+    const prevButton =
+        galleryElement.querySelector(".carousel-control-prev");
+
+
+    if (
+        !modalElement ||
+        !galleryElement ||
+        !galleryInner ||
+        !galleryIndicators ||
+        !galleryTitle
+    ) {
+        console.error("Event Gallery elements missing.");
+        return;
+    }
+
+
+    const eventModal =
+        bootstrap.Modal.getOrCreateInstance(
+            modalElement
+        );
+
+
+    /* Current gallery position */
+
+    let currentImageIndex = 0;
+
+    let currentImages = [];
+
+
+    /* =====================================================
+       SHOW IMAGE
+       ===================================================== */
+
+    function showEventImage(index) {
+
+        if (currentImages.length === 0) {
+            return;
+        }
+
+
+        /* Wrap around */
+
+        if (index < 0) {
+            index = currentImages.length - 1;
+        }
+
+        if (index >= currentImages.length) {
+            index = 0;
+        }
+
+
+        currentImageIndex = index;
+
+
+        /* Remove active from all slides */
+
+        const slides =
+            galleryInner.querySelectorAll(
+                ".carousel-item"
+            );
+
+        slides.forEach(function (slide, i) {
+
+            slide.classList.toggle(
+                "active",
+                i === currentImageIndex
+            );
+
+        });
+
+
+        /* Update indicators */
+
+        const indicators =
+            galleryIndicators.querySelectorAll(
+                "button"
+            );
+
+        indicators.forEach(function (button, i) {
+
+            button.classList.toggle(
+                "active",
+                i === currentImageIndex
+            );
+
+        });
+
+    }
+
+
+    /* =====================================================
+       NEXT IMAGE
+       ===================================================== */
+
+    function showNextImage(event) {
+
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        showEventImage(
+            currentImageIndex + 1
+        );
+
+    }
+
+
+    /* =====================================================
+       PREVIOUS IMAGE
+       ===================================================== */
+
+    function showPreviousImage(event) {
+
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        showEventImage(
+            currentImageIndex - 1
+        );
+
+    }
+
+
+    /* =====================================================
+       ARROW BUTTONS
+       ===================================================== */
+
+    nextButton.addEventListener(
+        "click",
+        showNextImage
+    );
+
+    prevButton.addEventListener(
+        "click",
+        showPreviousImage
+    );
+
+
+    /* =====================================================
+       EVENT CARDS
+       ===================================================== */
+
+    eventCards.forEach(function (card) {
+
+        card.addEventListener(
+            "click",
+            function () {
+
+                const imageData =
+                    this.getAttribute(
+                        "data-images"
+                    ) || "";
+
+
+                currentImages =
+                    imageData
+                        .split(",")
+                        .map(function (image) {
+                            return image.trim();
+                        })
+                        .filter(function (image) {
+                            return image.length > 0;
+                        });
+
+
+                /* Event title */
+
+                const titleElement =
+                    this.querySelector(
+                        ".news-title"
+                    );
+
+                const title =
+                    titleElement
+                        ? titleElement.textContent.trim()
+                        : "Event Gallery";
+
+
+                galleryTitle.textContent =
+                    title;
+
+
+                /* Clear old gallery */
+
+                galleryInner.innerHTML = "";
+
+                galleryIndicators.innerHTML = "";
+
+
+                /* =================================================
+                   CREATE SLIDES
+                   ================================================= */
+
+                currentImages.forEach(
+                    function (image, index) {
+
+                        const active =
+                            index === 0
+                                ? "active"
+                                : "";
+
+
+                        galleryInner.insertAdjacentHTML(
+                            "beforeend",
+                            `
+                            <div class="carousel-item ${active}">
+                                <img
+                                    src="${image}"
+                                    alt="${title} - Image ${index + 1}">
+                            </div>
+                            `
+                        );
+
+
+                        /* Indicator */
+
+                        galleryIndicators.insertAdjacentHTML(
+                            "beforeend",
+                            `
+                            <button
+                                type="button"
+                                class="${active}"
+                                aria-label="Image ${index + 1}">
+                            </button>
+                            `
+                        );
+
+                    }
+                );
+
+
+                /* =================================================
+                   INDICATOR CLICK
+                   ================================================= */
+
+                const indicators =
+                    galleryIndicators.querySelectorAll(
+                        "button"
+                    );
+
+
+                indicators.forEach(
+                    function (button, index) {
+
+                        button.addEventListener(
+                            "click",
+                            function (event) {
+
+                                event.preventDefault();
+                                event.stopPropagation();
+
+                                showEventImage(index);
+
+                            }
+                        );
+
+                    }
+                );
+
+
+                /* Start at first image */
+
+                currentImageIndex = 0;
+
+                showEventImage(0);
+
+
+                /* Open modal */
+
+                eventModal.show();
+
+            }
+        );
+
     });
-}
 
-// Ensure autoplay is actually running (guards against any environment where
-// the instance above was created but cycling didn't start automatically).
-carousel.cycle();
 
-cards.forEach(card => {
+    /* =====================================================
+       KEYBOARD SUPPORT
+       ===================================================== */
 
-card.addEventListener("click", function(){
+    modalElement.addEventListener(
+        "shown.bs.modal",
+        function () {
 
-const images = this.dataset.images.split(",");
+            document.addEventListener(
+                "keydown",
+                handleGalleryKeyboard
+            );
 
-carouselInner.innerHTML = "";
-carouselIndicators.innerHTML = "";
+        }
+    );
 
-images.forEach((img, index)=>{
 
-const active = index === 0 ? "active" : "";
+    modalElement.addEventListener(
+        "hidden.bs.modal",
+        function () {
 
-carouselInner.insertAdjacentHTML("beforeend",
-`
-<div class="carousel-item ${active}" data-bs-interval="2000">
-<img src="${img}" class="d-block w-100"
-style="height:450px;object-fit:contain;background:#f8f9fa;">
-</div>
-`
-);
+            document.removeEventListener(
+                "keydown",
+                handleGalleryKeyboard
+            );
 
-carouselIndicators.insertAdjacentHTML("beforeend",
-`
-<button type="button"
-data-bs-target="#mainCarousel"
-data-bs-slide-to="${index}"
-class="${active}"
-${index === 0 ? 'aria-current="true"' : ""}
-></button>
-`
-);
+        }
+    );
 
-});
 
-const oldInstance = bootstrap.Carousel.getInstance(mainCarouselElement);
+    function handleGalleryKeyboard(event) {
 
-if (oldInstance) {
-    oldInstance.dispose();
-}
+        if (event.key === "ArrowRight") {
+            showNextImage();
+        }
 
-carousel = new bootstrap.Carousel(mainCarouselElement,{
-    interval: 2000,
-    ride: "carousel",
-    pause: false,
-    wrap: true,
-    touch: true
-});
+        if (event.key === "ArrowLeft") {
+            showPreviousImage();
+        }
 
-carousel.cycle();
-
-window.scrollTo({top:0,behavior:"smooth"});
+    }
 
 });
-
-});
-
-});
-
 </script>
-
 {% endblock %}

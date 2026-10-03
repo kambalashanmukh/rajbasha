@@ -53,6 +53,7 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 
 # Local App Imports
+from .services.parichay import ParichayService
 from .utils import (
     send_system_email, get_allowed_quarters,
     ensure_current_financial_year
@@ -1671,15 +1672,28 @@ def send_otp_email(user, lang, target_email=None, email_type='otp'):
 
 @require_POST
 def custom_logout(request):
+
+    access_token = request.session.get("parichay_access_token")
+    username = getattr(request.user, "username", "unknown")
+
+    if access_token:
+        try:
+            ParichayService.revoke_token(access_token)  
+        except Exception as e:
+            print("PARICHAY REVOKE FAILED:", e)
+
     logout(request)
+
     log_audit(
         request,
         'logout',
         'CustomUser',
-        f"User {getattr(request.user, 'username', 'unknown')} logged out",
+        f"User {username} logged out",
     )
+
     messages.success(request, "You have been logged out successfully.")
-    return redirect('home')
+
+    return redirect("home")
 
 def home(request):
     events = get_all_events()
@@ -1688,6 +1702,15 @@ def home(request):
 def faqs(request):
     lang = request.session.get('lang', 'en')
     return render(request, "faqs.html", {"current_lang": lang})
+
+@login_required
+def rajbhasha_activities(request):
+    lang = request.session.get("lang", "en")
+    return render(
+        request,
+        "rajbhasha_activities.html",
+        {"current_lang": lang}
+    )   
 
 def event_detail(request, folder):
     events = get_all_events()

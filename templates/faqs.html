@@ -1,295 +1,660 @@
 {% extends "master.html" %}
+{% load static %}
 {% load translate_tags %}
 
 {% block title %}{{ "FAQs"|t:current_lang }}{% endblock %}
 
 {% block extra_css %}
 <style>
-:root{
-  --rbf-accent:#0e2f4c;
-  --rbf-blue:#155b91;
-  --rbf-gold:#a97a2f;
-  --rbf-gold-soft:#c99a4d;
+/* =========================================================
+   RAJBHASHA UI REDESIGN — FAQ PAGE
+   ========================================================= */
 
-  --rbf-text:#0e2f4c;
-  --rbf-body:#1f2b38;
-  --rbf-muted:#5c6b7a;
-  --rbf-surface:#ffffff;
-  --rbf-tint:#f5f8fb;
-  --rbf-line:#e2e8f0;
+.faq-page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 3rem 1.25rem 5rem;
 }
 
-[data-bs-theme="dark"]{
-  --rbf-text:#e9f0f7;
-  --rbf-body:#cdd8e3;
-  --rbf-muted:#9db0c2;
-  --rbf-surface:#132539;
-  --rbf-tint:#182c43;
-  --rbf-line:#2b435f;
-  --rbf-gold-soft:#d6ac6c;
+.faq-hero {
+    position: relative;
+    padding: 2.25rem 2rem;
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--rb-border);
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--rb-primary-light), var(--rb-surface) 55%, var(--rb-secondary-light));
+    box-shadow: var(--rb-shadow-sm);
 }
 
-.faq-page{
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2.75rem 1rem 5rem;
+.faq-hero::after {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    right: -55px;
+    top: -70px;
+    border-radius: 50%;
+    background: rgba(232, 121, 169, .10);
+    filter: blur(8px);
+    pointer-events: none;
 }
 
-.faq-header{
-  border-bottom: 1px solid var(--rbf-line);
-  padding-bottom: 1.75rem;
-  margin-bottom: 2.25rem;
-}
-.faq-kicker{
-  color: var(--rbf-gold-soft);
-  font-weight: 600;
-  font-size: .82rem;
-  margin-bottom: .4rem;
-}
-.faq-header h1{
-  font-size: 1.65rem;
-  font-weight: 700;
-  color: var(--rbf-text);
-  margin: 0 0 .5rem;
-}
-.faq-header p{
-  color: var(--rbf-muted);
-  margin: 0;
-  max-width: 60ch;
-  line-height: 1.6;
+.faq-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--rb-secondary);
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: .55rem;
 }
 
-.faq-topic{ margin-top: 2.5rem; }
-.faq-topic:first-of-type{ margin-top: 0; }
-
-.faq-topic-head{
-  display: flex; align-items: center; gap: .65rem;
-  margin-bottom: 1rem;
-}
-.faq-topic-num{
-  flex: 0 0 30px; width: 30px; height: 30px;
-  border-radius: 50%; background: var(--rbf-accent); color: #fff;
-  display: grid; place-items: center; font-size: .85rem; font-weight: 700;
-}
-.faq-topic-title{
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--rbf-text);
-  margin: 0;
+.faq-kicker::before {
+    content: "";
+    width: 24px;
+    height: 3px;
+    border-radius: 5px;
+    background: var(--rb-pink);
 }
 
-.accordion-item{
-  border: 1px solid var(--rbf-line);
-  border-radius: 8px !important;
-  overflow: hidden;
-  margin-bottom: .6rem;
-  background: var(--rbf-surface);
-}
-.accordion-item:last-child{ margin-bottom: 0; }
-
-.accordion-button{
-  font-weight: 600;
-  font-size: .96rem;
-  color: var(--rbf-body);
-  padding: .95rem 1.2rem;
-  background: var(--rbf-surface);
-}
-.accordion-button:not(.collapsed){
-  color: var(--rbf-text);
-  background: var(--rbf-tint);
-  box-shadow: none;
-}
-.accordion-button:focus{
-  box-shadow: 0 0 0 3px rgba(21, 91, 145, .2);
-  border-color: var(--rbf-blue);
-}
-.accordion-button:hover{ background: var(--rbf-tint); }
-[data-bs-theme="dark"] .accordion-button::after{ filter: invert(1) grayscale(100); }
-
-.faq-answer{
-  line-height: 1.7;
-  color: var(--rbf-body);
-  font-size: .94rem;
-  padding: 1.1rem 1.2rem 1.3rem;
-  border-top: 1px solid var(--rbf-line);
-  background: var(--rbf-surface);
-}
-.faq-answer p{ margin: 0 0 .75rem; }
-.faq-answer p:last-child{ margin-bottom: 0; }
-.faq-answer img{
-  border: 1px solid var(--rbf-line);
-  border-radius: 8px;
+.faq-hero h1 {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 .55rem;
+    color: var(--rb-primary-dark);
+    font-size: clamp(1.7rem, 3vw, 2.25rem);
+    font-weight: 800;
 }
 
-@media (max-width: 575.98px){
-  .faq-page{ padding: 2rem 1rem 3.5rem; }
-  .faq-header h1{ font-size: 1.4rem; }
+.faq-hero p {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0;
+    color: var(--rb-text-muted);
+    line-height: 1.7;
+}
+
+.faq-topic {
+    margin-top: 2.25rem;
+}
+
+.faq-topic:first-of-type {
+    margin-top: 0;
+}
+
+.faq-topic-head {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    margin-bottom: 1rem;
+}
+
+.faq-topic-num {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--rb-primary), var(--rb-secondary));
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 800;
+    box-shadow: var(--rb-shadow-sm);
+}
+
+.faq-topic-title {
+    margin: 0;
+    color: var(--rb-text);
+    font-size: 1.18rem;
+    font-weight: 750;
+}
+
+.faq-topic-title::after {
+    content: "";
+    display: block;
+    width: 32px;
+    height: 3px;
+    margin-top: 5px;
+    border-radius: 5px;
+    background: var(--rb-pink);
+}
+
+.faq-topic .accordion {
+    display: grid;
+    gap: .75rem;
+}
+
+.faq-topic .accordion-item {
+    border: 1px solid var(--rb-border);
+    border-radius: 13px !important;
+    overflow: hidden;
+    background: var(--rb-surface);
+    box-shadow: var(--rb-shadow-sm);
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.faq-topic .accordion-item:hover {
+    border-color: var(--rb-primary);
+    box-shadow: var(--rb-shadow);
+    transform: translateY(-1px);
+}
+
+.faq-topic .accordion-button {
+    position: relative;
+    padding: 1.05rem 1.25rem;
+    color: var(--rb-text);
+    background: var(--rb-surface);
+    font-size: .96rem;
+    font-weight: 650;
+    line-height: 1.5;
+    box-shadow: none;
+}
+
+.faq-topic .accordion-button:hover {
+    background: var(--rb-primary-light);
+}
+
+.faq-topic .accordion-button:not(.collapsed) {
+    color: var(--rb-primary-dark);
+    background: var(--rb-primary-light);
+    box-shadow: none;
+}
+
+.faq-topic .accordion-button:focus {
+    box-shadow: 0 0 0 3px rgba(79, 70, 165, .15);
+}
+
+.faq-topic .accordion-button::after {
+    width: .9rem;
+    height: .9rem;
+    background-size: .9rem;
+}
+
+[data-bs-theme="dark"] .faq-topic .accordion-button::after {
+    filter: invert(1) grayscale(100%);
+}
+
+.faq-answer {
+    padding: 1.15rem 1.25rem 1.35rem;
+    border-top: 1px solid var(--rb-border);
+    background: var(--rb-surface);
+    color: var(--rb-text);
+    font-size: .94rem;
+    line-height: 1.75;
+}
+
+.faq-answer p {
+    margin: 0 0 .8rem;
+}
+
+.faq-answer p:last-child {
+    margin-bottom: 0;
+}
+
+.faq-answer img {
+    display: block;
+    max-width: 100%;
+    margin-top: 1rem;
+    border: 1px solid var(--rb-border);
+    border-radius: 11px;
+    box-shadow: var(--rb-shadow-sm);
+}
+
+.faq-screenshot-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: 1rem;
+    margin-bottom: .6rem;
+    padding: .35rem .65rem;
+    border-radius: 999px;
+    background: var(--rb-pink-light);
+    color: var(--rb-primary-dark);
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+[data-bs-theme="dark"] .faq-hero {
+    background: linear-gradient(135deg, var(--rb-primary-light), var(--rb-surface) 55%, var(--rb-secondary-light));
+}
+
+[data-bs-theme="dark"] .faq-hero h1,
+[data-bs-theme="dark"] .faq-topic .accordion-button:not(.collapsed) {
+    color: var(--rb-text);
+}
+
+@media (max-width: 767.98px) {
+    .faq-page {
+        padding: 2rem .9rem 3.5rem;
+    }
+
+    .faq-hero {
+        padding: 1.5rem 1.25rem;
+        border-radius: 14px;
+    }
+
+    .faq-topic-head {
+        gap: .7rem;
+    }
+
+    .faq-topic-num {
+        flex-basis: 34px;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+    }
+
+    .faq-topic-title {
+        font-size: 1.05rem;
+    }
+
+    .faq-topic .accordion-button {
+        padding: .95rem 1rem;
+        font-size: .92rem;
+    }
+
+    .faq-answer {
+        padding: 1rem;
+    }
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <section class="faq-page">
-    <div class="faq-header">
+
+    <div class="faq-hero">
         <div class="faq-kicker">{{ "Help Centre"|t:current_lang }}</div>
         <h1>{{ "Frequently Asked Questions"|t:current_lang }}</h1>
         <p>
-            {{ "Find quick answers for registration, QPR reports, and employee profile updates."|t:current_lang }}
+            {{ "Find quick answers about account access, QPR reports, and employee profile updates on the Rajbhasha portal."|t:current_lang }}
         </p>
     </div>
 
+    <!-- 01 — ACCOUNT & REGISTRATION -->
     <div class="faq-topic">
         <div class="faq-topic-head">
-            <div class="faq-topic-num">1</div>
-            <h2 class="faq-topic-title">{{ "User Registration"|t:current_lang }}</h2>
+            <div class="faq-topic-num">01</div>
+            <h2 class="faq-topic-title">{{ "Account & Registration"|t:current_lang }}</h2>
         </div>
+
         <div class="accordion" id="registrationFaq">
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#registrationOne" aria-expanded="false" aria-controls="registrationOne">
-                        {{ "How can a new user register on the portal?"|t:current_lang }}
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#registrationOne"
+                            aria-expanded="false" aria-controls="registrationOne">
+                        {{ "How do I create an account on the Rajbhasha portal?"|t:current_lang }}
                     </button>
                 </h3>
-                <div id="registrationOne" class="accordion-collapse collapse" data-bs-parent="#registrationFaq">
+                <div id="registrationOne" class="accordion-collapse collapse"
+                     data-bs-parent="#registrationFaq">
                     <div class="accordion-body faq-answer">
-                        <p>{{ "A new user can open the sign up page, enter the required employee and contact details, verify the OTP, and submit the registration request for approval."|t:current_lang }}</p> 
-                        <img src="/static/images/faqs/Create_account.png" alt="Create Account Screen" class="img-fluid mt-3" style="max-width: 100%;">
+                        <p>
+                            {{ "Rajbhasha uses Parichay for portal access. Select the Parichay login option and sign in using your Parichay account. Follow the Parichay authentication process to access the Rajbhasha portal."|t:current_lang }}
+                        </p>
                     </div>
                 </div>
             </div>
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#registrationTwo" aria-expanded="false" aria-controls="registrationTwo">
-                        {{ "What details are required during registration?"|t:current_lang }}
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#registrationTwo"
+                            aria-expanded="false" aria-controls="registrationTwo">
+                        {{ "What information is required during registration?"|t:current_lang }}
                     </button>
                 </h3>
-                <div id="registrationTwo" class="accordion-collapse collapse" data-bs-parent="#registrationFaq">
+                <div id="registrationTwo" class="accordion-collapse collapse"
+                     data-bs-parent="#registrationFaq">
                     <div class="accordion-body faq-answer">
-                        <p>{{ "The user should provide the employee code, name, mobile number, email address, office or division details, and other information requested in the registration form."|t:current_lang }}</p>
-                        <img src="/static/images/faqs/fill_details.png" alt="Fill Details Screen" class="img-fluid mt-3" style="max-width: 100%;">
+                        <p>
+                            {{ "The user should provide the employee code, name, mobile number, email address, office or division details, and other information requested in the registration form."|t:current_lang }}
+                        </p>
+                        <div class="faq-screenshot-label">Registration details</div>
+                        <img src="{% static 'images/faqs/fill_details.png' %}"
+                             alt="Fill Details Screen" class="img-fluid">
                     </div>
                 </div>
             </div>
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#registrationThree" aria-expanded="false" aria-controls="registrationThree">
-                        {{ "What should I do if my registration is pending?"|t:current_lang }}
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#registrationThree"
+                            aria-expanded="false" aria-controls="registrationThree">
+                        {{ "What happens after I submit my registration?"|t:current_lang }}
                     </button>
                 </h3>
-                <div id="registrationThree" class="accordion-collapse collapse" data-bs-parent="#registrationFaq">
+                <div id="registrationThree" class="accordion-collapse collapse"
+                     data-bs-parent="#registrationFaq">
                     <div class="accordion-body faq-answer">
-                        {{ "If the registration is pending, please wait for approval from the authorized officer. You may contact your office administrator or HOD if approval is delayed."|t:current_lang }}
+                        <p>
+                            {{ "After submission, the registration request goes through the portal's approval process. If the request remains pending, the user should wait for approval from the authorized officer."|t:current_lang }}
+                        </p>
                     </div>
                 </div>
             </div>
+
+            <div class="accordion-item">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#registrationFour"
+                            aria-expanded="false" aria-controls="registrationFour">
+                        {{ "What should I do if my registration is pending for a long time?"|t:current_lang }}
+                    </button>
+                </h3>
+                <div id="registrationFour" class="accordion-collapse collapse"
+                     data-bs-parent="#registrationFaq">
+                    <div class="accordion-body faq-answer">
+                        <p>
+                            {{ "If approval is delayed, contact your office administrator or the appropriate authorized officer."|t:current_lang }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
+    <!-- 02 — QPR & REPORTS -->
     <div class="faq-topic">
         <div class="faq-topic-head">
-            <div class="faq-topic-num">2</div>
-            <h2 class="faq-topic-title">{{ "QPR Update & Report Generation"|t:current_lang }}</h2>
+            <div class="faq-topic-num">02</div>
+            <h2 class="faq-topic-title">{{ "QPR & Reports"|t:current_lang }}</h2>
         </div>
+
         <div class="accordion" id="qprFaq">
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#qprOne" aria-expanded="false" aria-controls="qprOne">
-                        {{ "How do I fill QPR data?"|t:current_lang }}
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#qprOne"
+                            aria-expanded="false" aria-controls="qprOne">
+                        {{ "How do I fill and submit a QPR?"|t:current_lang }}
                     </button>
                 </h3>
                 <div id="qprOne" class="accordion-collapse collapse" data-bs-parent="#qprFaq">
                     <div class="accordion-body faq-answer">
-                        <p>{{ "Go to the fill Quarterly Progress Report section in the user dashboard. Select the relevant quarter, year and date. Fill in the necessary sections and submit the report."|t:current_lang }}</p>
-                        <img src="/static/images/faqs/QPR_fill.png" alt="QPR Fill Screen" class="img-fluid mt-3" style="max-width: 100%;">
+                        <p>
+                            {{ "Go to the Fill Quarterly Progress Report section in the user dashboard. Select the relevant quarter, year and date. Fill in the necessary sections and submit the report."|t:current_lang }}
+                        </p>
+                        <div class="faq-screenshot-label">QPR form</div>
+                        <img src="{% static 'images/faqs/QPR_fill.png' %}"
+                             alt="QPR Fill Screen" class="img-fluid">
                     </div>
                 </div>
             </div>
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#qprTwo" aria-expanded="false" aria-controls="qprTwo">
-                        {{ "Can I edit a submitted QPR report?"|t:current_lang }}
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#qprTwo"
+                            aria-expanded="false" aria-controls="qprTwo">
+                        {{ "Can I request changes to a submitted QPR?"|t:current_lang }}
                     </button>
                 </h3>
                 <div id="qprTwo" class="accordion-collapse collapse" data-bs-parent="#qprFaq">
                     <div class="accordion-body faq-answer">
-                        <p>{{ "Yes, you can edit a submitted QPR report. Go to the view history in the user dashboard and request to edit the specific qpr that needed to be changed and wait for the manager approval to grant permission to edit that QPR."|t:current_lang }}</p>
-                        <img src="/static/images/faqs/Request_to_edit.png" alt="Request To Edit Screen" class="img-fluid mt-3" style="max-width: 100%;">
+                        <p>
+                            {{ "Yes, you can request permission to edit a submitted QPR. Go to View History, select the QPR that needs to be changed, and submit a request to edit it. The request must go through the applicable approval process before the QPR can be edited."|t:current_lang }}
+                        </p>
+                        <div class="faq-screenshot-label">Request to edit</div>
+                        <img src="{% static 'images/faqs/Request_to_edit.png' %}"
+                             alt="Request To Edit Screen" class="img-fluid">
                     </div>
                 </div>
             </div>
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#qprThree" aria-expanded="false" aria-controls="qprThree">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#qprThree"
+                            aria-expanded="false" aria-controls="qprThree">
                         {{ "How can I generate or print a QPR report?"|t:current_lang }}
                     </button>
                 </h3>
                 <div id="qprThree" class="accordion-collapse collapse" data-bs-parent="#qprFaq">
                     <div class="accordion-body faq-answer">
-                      <p>{{ "For users, Go to the View History and click on view of your specified qpr. Then you will be having a button to print or generate the report."|t:current_lang }}</p>
-                      <p>{{ "For HODs Divisional QPR- Click on view and print in the divisional QPR section of HOD Dashboard."|t:current_lang }}</p>
-                      <p>{{ "For manager, go to manager report in the manager dashboard and you can print the state QPR."|t:current_lang }}</p>
+                        <p>
+                            {{ "For users, go to View History and click View for the specified QPR. You will then have an option to print or generate the report."|t:current_lang }}
+                        </p>
+                        <p>
+                            {{ "For HODs, use View and Print in the Divisional QPR section of the HOD Dashboard."|t:current_lang }}
+                        </p>
+                        <p>
+                            {{ "For managers, go to Manager Report in the Manager Dashboard to print the state QPR."|t:current_lang }}
+                        </p>
                     </div>
                 </div>
             </div>
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#qprFour" aria-expanded="false" aria-controls="qprFour">
-                        {{ "Who approves or reviews QPR details?"|t:current_lang }}
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#qprFour"
+                            aria-expanded="false" aria-controls="qprFour">
+                        {{ "Who reviews and approves QPR details?"|t:current_lang }}
                     </button>
                 </h3>
                 <div id="qprFour" class="accordion-collapse collapse" data-bs-parent="#qprFaq">
                     <div class="accordion-body faq-answer">
-                        {{ "The manager accepts or rejects the qpr approvals in his dashboard. Reviewing QPR details are done by HOD and Manager."|t:current_lang }}
+                        <p>
+                            {{ "QPR details are reviewed by the HOD and Manager. The manager handles acceptance or rejection of QPR approvals through the dashboard."|t:current_lang }}
+                        </p>
                     </div>
                 </div>
             </div>
+
+            <div class="accordion-item">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#qprFive"
+                            aria-expanded="false" aria-controls="qprFive">
+                        {{ "What can I do if I need to correct a submitted QPR?"|t:current_lang }}
+                    </button>
+                </h3>
+                <div id="qprFive" class="accordion-collapse collapse" data-bs-parent="#qprFaq">
+                    <div class="accordion-body faq-answer">
+                        <p>
+                            {{ "Use the Request to Edit option from the QPR history and follow the approval process for the requested change."|t:current_lang }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
+    <!-- 03 — EMPLOYEE PROFILE -->
     <div class="faq-topic">
         <div class="faq-topic-head">
-            <div class="faq-topic-num">3</div>
+            <div class="faq-topic-num">03</div>
             <h2 class="faq-topic-title">{{ "Employee Profile"|t:current_lang }}</h2>
         </div>
+
         <div class="accordion" id="profileFaq">
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#profileOne" aria-expanded="false" aria-controls="profileOne">
-                        {{ "How do I update my employee profile?"|t:current_lang }}
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#profileOne"
+                            aria-expanded="false" aria-controls="profileOne">
+                        {{ "How do I view and update my employee profile?"|t:current_lang }}
                     </button>
                 </h3>
                 <div id="profileOne" class="accordion-collapse collapse" data-bs-parent="#profileFaq">
                     <div class="accordion-body faq-answer">
-                        <p>{{ "Open the profile page from the dashboard, update the permitted fields, and save the changes. Some fields may require approval before they are finalized."|t:current_lang }}</p>
-                        <img src="/static/images/faqs/edit_profile.png" alt="Edit Profile Screen" class="img-fluid mt-3" style="max-width: 100%;">
+                        <p>
+                            {{ "Open the Profile page from the dashboard, update the fields that are available for editing, and save the changes."|t:current_lang }}
+                        </p>
+                        <div class="faq-screenshot-label">Edit profile</div>
+                        <img src="{% static 'images/faqs/edit_profile.png' %}"
+                             alt="Edit Profile Screen" class="img-fluid">
                     </div>
                 </div>
             </div>
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#profileTwo" aria-expanded="false" aria-controls="profileTwo">
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#profileTwo"
+                            aria-expanded="false" aria-controls="profileTwo">
                         {{ "Why are some profile fields locked?"|t:current_lang }}
                     </button>
                 </h3>
                 <div id="profileTwo" class="accordion-collapse collapse" data-bs-parent="#profileFaq">
                     <div class="accordion-body faq-answer">
-                        {{ "Fields may be locked after approval to protect official records. If a correction is needed, use the profile edit request option where available."|t:current_lang }}
+                        <p>
+                            {{ "Some fields may be locked after approval to protect official records. If a correction is required, use the profile edit request option where available."|t:current_lang }}
+                        </p>
                     </div>
                 </div>
             </div>
+
             <div class="accordion-item">
                 <h3 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#profileThree" aria-expanded="false" aria-controls="profileThree">
-                        {{ "Who approves employee profile changes?"|t:current_lang }}
+                    <button class="accordion-button collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#profileThree"
+                            aria-expanded="false" aria-controls="profileThree">
+                        {{ "How do I request a correction to my profile?"|t:current_lang }}
                     </button>
                 </h3>
                 <div id="profileThree" class="accordion-collapse collapse" data-bs-parent="#profileFaq">
                     <div class="accordion-body faq-answer">
-                        {{ "Profile changes are approved by the assigned HOD or authorized officer based on the portal workflow."|t:current_lang }}
+                        <p>
+                            {{ "Use the profile edit or request option available in the portal and submit the required changes through the applicable workflow."|t:current_lang }}
+                        </p>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
+
+        <!-- =====================================================
+         04 — GETTING HELP
+         ===================================================== -->
+
+    <div class="faq-topic">
+
+        <div class="faq-topic-head">
+            <div class="faq-topic-num">04</div>
+
+            <h2 class="faq-topic-title">
+                {{ "Getting Help"|t:current_lang }}
+            </h2>
+        </div>
+
+
+        <div class="accordion" id="helpFaq">
+
+            <!-- Question 1 -->
+            <div class="accordion-item">
+
+                <h3 class="accordion-header">
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#helpOne"
+                        aria-expanded="false"
+                        aria-controls="helpOne">
+
+                        {{ "What should I do if I cannot update my information?"|t:current_lang }}
+
+                    </button>
+                </h3>
+
+                <div
+                    id="helpOne"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#helpFaq">
+
+                    <div class="accordion-body faq-answer">
+
+                        <p>
+                            {{ "First check whether the field is locked or whether the change requires an edit request or approval. If you are still unable to make the required change, contact your office administrator or the appropriate authorized officer."|t:current_lang }}
+                        </p>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Question 2 -->
+            <div class="accordion-item">
+
+                <h3 class="accordion-header">
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#helpTwo"
+                        aria-expanded="false"
+                        aria-controls="helpTwo">
+
+                        {{ "What should I do if I face an issue while using the portal?"|t:current_lang }}
+
+                    </button>
+                </h3>
+
+                <div
+                    id="helpTwo"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#helpFaq">
+
+                    <div class="accordion-body faq-answer">
+
+                        <p>
+                            {{ "Check the relevant instructions in the FAQ section first. If the issue continues, contact your office administrator or the appropriate authorized officer for assistance."|t:current_lang }}
+                        </p>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Question 3 -->
+            <div class="accordion-item">
+
+                <h3 class="accordion-header">
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#helpThree"
+                        aria-expanded="false"
+                        aria-controls="helpThree">
+
+                        {{ "What should I do if my request is still pending?"|t:current_lang }}
+
+                    </button>
+                </h3>
+
+                <div
+                    id="helpThree"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#helpFaq">
+
+                    <div class="accordion-body faq-answer">
+
+                        <p>
+                            {{ "If your request remains pending, wait for the applicable approval process to be completed. If the delay continues, contact your office administrator or the appropriate authorized officer."|t:current_lang }}
+                        </p>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 </section>
 {% endblock %}
